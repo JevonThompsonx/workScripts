@@ -19,10 +19,10 @@ These versions are still under testing. For some applications, I needed to adjus
 My current powershell version. This version does quiet installs of .msi files with log files for each app in the archive folder while .exes does a normal install with the GUI
 
 Powershells scripts are disabled by default. To enable for the current terminal session only: 
-powershell -ExecutionPolicy Bypass 
+`powershell -ExecutionPolicy Bypass` 
 
 #### Steps:
 1. Open cmd 
 2. Navigate to the directory with the script
-3. Enable powershell commands for this session only: powershell -ExecutionPolicy Bypass 
-4. Run the script: ./installAllArchiveSoftwarev2.5.ps1
+3. Enable powershell commands for this session only: `powershell -ExecutionPolicy Bypass` 
+4. Run the script: `./installAllArchiveSoftwarev2.5.ps1`
