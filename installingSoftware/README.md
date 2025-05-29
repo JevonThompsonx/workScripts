@@ -26,4 +26,5 @@ powershell -ExecutionPolicy Bypass
 
 ## Online install Steps
 1. Open powershell as an admin
-2. & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/InstallScripts/refs/heads/main/installingSoftware/installAllArchiveSoftwarev2.5.ps1")))
+2. Enable powershell commands for this session only: powershell -ExecutionPolicy Bypass 
+3. & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/InstallScripts/refs/heads/main/installingSoftware/installAllArchiveSoftwarev2.5.ps1")))
