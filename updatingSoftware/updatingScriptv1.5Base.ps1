@@ -1,5 +1,11 @@
 ## v1.5 - 2025-05-29
 # Added pre-flight check for running applications
+# This script only works for .msi files.
+# It will download the file, install it, and then clean up the installer file.
+# It will check for running applications.
+# This script is a base script that can be used to update any software.
+# It is not specific to any one application.
+# It is a template that can be used to create a script for any application.
 # --- Configuration ---
 $downloadUrl = "linkHere"
 $localDirectory = "C:\Archive"
