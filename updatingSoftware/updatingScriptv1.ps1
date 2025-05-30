@@ -1,3 +1,8 @@
+# v1.0 - 2025-05-29
+# This script only works for .msi files.
+# It will download the file, install it, and then clean up the installer file.
+# It will not check for running applications.
+
 # --- Configuration ---
 
 ## Current config uses egnyte as an example
