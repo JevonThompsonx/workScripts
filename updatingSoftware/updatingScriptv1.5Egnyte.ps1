@@ -1,5 +1,8 @@
 ## v1.5 - 2025-05-29
 # Added pre-flight check for running applications
+# This script only works for .msi files.
+# It will download the file, install it, and then clean up the installer file.
+# It will check for running applications.
 # --- Configuration ---
 $downloadUrl = "https://egnyte-cdn.egnyte.com/egnytedrive/win/en-us/3.25.1/EgnyteDesktopApp_3.25.1_161.msi"
 $localDirectory = "C:\Archive"
@@ -11,11 +14,11 @@ Write-Host "Performing pre-flight check for open applications..."
 
 # Add the process names (without .exe) of critical apps that use Egnyte
 $criticalProcesses = @(
-    "WINWORD",      # Microsoft Word
-    "EXCEL",        # Microsoft Excel
-    "POWERPNT",     # Microsoft PowerPoint
-    "OUTLOOK",      # Microsoft Outlook (can lock files via attachments)
-    "acad",         # For AutoCAD / Civil 3D
+    "WINWORD", # Microsoft Word
+    "EXCEL", # Microsoft Excel
+    "POWERPNT", # Microsoft PowerPoint
+    "OUTLOOK", # Microsoft Outlook (can lock files via attachments)
+    "acad", # For AutoCAD / Civil 3D
     "Vectorworks",
     "Vectorworks2024",
     "Vectorworks2025",
@@ -24,12 +27,13 @@ $criticalProcesses = @(
     "Vectorworks2022",
     "Vectorworks2023",
     "Vectorworks2024",
-    "PDFXchange",    # For PDF-XChange Editor
+    "PDFXchange", # For PDF-XChange Editor
     "PDFXEdit",
     "ENERCALC",
     "ETABS",
     "Revu",
     "risa3dw"
+    
     # Add any other relevant application process names here
 )
 
