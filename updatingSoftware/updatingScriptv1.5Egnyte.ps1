@@ -29,8 +29,7 @@ $criticalProcesses = @(
     "ENERCALC",
     "ETABS",
     "Revu",
-    "risa3dw",
-    
+    "risa3dw"
     # Add any other relevant application process names here
 )
 
