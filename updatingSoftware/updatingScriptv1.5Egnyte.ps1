@@ -25,7 +25,12 @@ $criticalProcesses = @(
     "Vectorworks2023",
     "Vectorworks2024",
     "PDFXchange",    # For PDF-XChange Editor
-    "PDFXEdit"
+    "PDFXEdit",
+    "ENERCALC",
+    "ETABS",
+    "Revu",
+    "risa3dw",
+    
     # Add any other relevant application process names here
 )
 
