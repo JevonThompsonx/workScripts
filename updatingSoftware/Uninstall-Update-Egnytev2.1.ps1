@@ -13,6 +13,7 @@
     2.1 - 2025-06-04
 #>
 
+
 # --- Configuration ---
 $newEgnyteVersion = "3.25.1"
 $downloadUrl_Msi = "https://egnyte-cdn.egnyte.com/egnytedrive/win/en-us/3.25.1/EgnyteDesktopApp_3.25.1_161.msi"
@@ -130,4 +131,5 @@ Remove-Item -Path $localDirectory -Recurse -Force
 Write-Host "Cleanup complete."
 
 Write-Host "SUCCESS: Egnyte has been cleanly reinstalled."
+
 exit 0
