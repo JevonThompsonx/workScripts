@@ -12,7 +12,7 @@
 Write-Host "--- STAGE 2: EGNYTE PAVE SCRIPT INITIATED ---"
 
 # --- Configuration ---
-$downloadUrl_Msi = "https://egnyte-cdn.egnyte.com/egnytedrive/win/en-us/3.25.1/EgnyteDesktopApp_3.25.1_161.msi" 
+$downloadUrl_Msi = "https://egnyte-cdn.egnyte.com/egnytedrive/win/en-us/latest/EgnyteConnectWin.msi" 
 $localDirectory = "C:\EgnyteTempInstall"
 $msiFileName = "EgnyteSetup.msi"
 $localMsiPath = Join-Path -Path $localDirectory -ChildPath $msiFileName

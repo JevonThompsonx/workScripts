@@ -88,7 +88,7 @@ function Invoke-SilentUninstall {
 
 Invoke-SilentUninstall -AppName "Egnyte"
 Write-Host "Uninstall process complete. Waiting for processes to terminate..."
-Start-Sleep -Seconds 20 # Allow time for uninstall processes to fully close
+Start-Sleep -Seconds 60 # Allow time for uninstall processes to fully close
 
 # --- 4. Verify and Clean Legacy Folders ---
 Write-Host "STEP 4: Verifying removal of legacy cache folders for all user profiles..."

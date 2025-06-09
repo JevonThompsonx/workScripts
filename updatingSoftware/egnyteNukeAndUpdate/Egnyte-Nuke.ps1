@@ -37,7 +37,7 @@ foreach ($appName in $appsToUninstall) {
     }
 }
 Write-Host "Waiting for uninstallers to finish..."
-Start-Sleep -Seconds 20
+Start-Sleep -Seconds 120
 
 # --- 3. File System Scrub ---
 Write-Host "Step 3: Scrubbing leftover Egnyte folders..."

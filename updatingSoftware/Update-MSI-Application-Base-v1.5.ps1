@@ -61,7 +61,7 @@ catch {
 }
 
 # Install the Egnyte update silently
-Write-Host "Installing the Egnyte update..."
+Write-Host "Installing the update..."
 $msiArgs = @(
     "/i"
     "`"$localPath`"" 
