@@ -7,7 +7,7 @@
     4. Downloads and installs the latest Egnyte Desktop App.
     5. Cleans up installers.
 .DESCRIPTION
-    Designed for deployment via RMM, Intune, or SCCM. Must be run with Administrator/SYSTEM privileges.
+    Designed for deployment via RMM. Must be run with Administrator/SYSTEM privileges.
     This version has a function that mimics the Windows "Apps & Features" uninstall process.
 .VERSION
     2.1 - 2025-06-04
@@ -57,7 +57,7 @@ function Invoke-SilentUninstall {
         'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*',
         'HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*'
     )
-    Get-ItemProperty $registryPaths -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -like "*$AppName*" } | ForEach-Object {
+    Get-ItemProperty $registryPaths -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -eq "Egnyte Desktop App" } | ForEach-Object {
         if ($_.UninstallString) {
             Write-Host "Found program: $($_.DisplayName). Attempting silent uninstall..."
             $uninstallString = $_.UninstallString
