@@ -15,14 +15,14 @@ Write-Host "--- STAGE 1: EGNYTE NUKE SCRIPT INITIATED ---"
 Write-Host "Step 1: Terminating all Egnyte processes and services..."
 Get-Service -Name "egnytefs" -ErrorAction SilentlyContinue | Stop-Service -Force -ErrorAction SilentlyContinue
 Get-Process -Name "Egnyte*" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-Start-Sleep -Seconds 5 # Give processes time to die
+Start-Sleep -Seconds 60 # Give processes time to die
 
 # --- 2. Precise Uninstallation ---
 Write-Host "Step 2: Uninstalling Egnyte applications by exact display name..."
 $appsToUninstall = @(
     "Egnyte Desktop App", 
     "Egnyte Connect",
-    "Egnyte" # Add any other specific names you find
+    "Egnyte" # Add any other specific names find
 )
 
 foreach ($appName in $appsToUninstall) {
@@ -62,8 +62,6 @@ foreach ($folder in ($foldersToNuke | Select-Object -Unique)) {
     }
 }
 
-# --- 4. Reboot ---
-Write-Host "Step 4: Nuke complete. Forcing reboot in 30 seconds to prepare for Stage 2."
-Restart-Computer -Force -Timeout 30
+Write-Host "Step 4: Nuke complete. Please reboot your computer to prepare for Stage 2."
 
 exit 0
