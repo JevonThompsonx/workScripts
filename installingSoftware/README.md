@@ -28,3 +28,6 @@ Powershells scripts are disabled by default. To enable for the current terminal 
 1. Open powershell as an admin
 2. Enable powershell commands for this session only: powershell -ExecutionPolicy Bypass 
 3. & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/InstallScripts/refs/heads/main/installingSoftware/installAllArchiveSoftwarev2.5.ps1")))
+
+## Adding Web apps
+1. 3CX Web app: https://ashleyvancecloud.3cx.us:5001/#/people
