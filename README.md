@@ -4,15 +4,15 @@ This repository (workScripts) serves as a collection of various PowerShell and b
 Each subfolder contains a set of related scripts and, where applicable, a dedicated README file with more detailed instructions and information.
 
 **Repository Structure
-drives
+drives**
 
-installingSoftware
+**installingSoftware**
 
-updatingSoftware
+**updatingSoftware**
 
-windows setup
+**windows setup**
 
-windows uninstalls**
+**windows uninstalls**
 
 ## 📂 drives
 This folder contains scripts primarily focused on mapping and unmapping Egnyte drives. The main script, cloneDrives.ps1, automates the download of all necessary batch files for this purpose.
