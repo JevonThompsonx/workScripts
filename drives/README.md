@@ -14,9 +14,10 @@ Before running the script, you might need to adjust your PowerShell execution po
 
 ### Enabling PowerShell Script Execution
 To allow the script to run, open PowerShell as an Administrator and execute the following command:
+
 `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
 
-**Set-ExecutionPolicy:** This cmdlet modifies the execution policy.
+**Set-ExecutionPolicy:** This cmdlet modifies the execution policy
 
 **RemoteSigned:** This policy allows scripts created on your local computer to run. Scripts downloaded from the internet must be signed by a trusted publisher. Since this script is a one-off download and execution, RemoteSigned is generally sufficient and safer than Unrestricted.
 
@@ -31,6 +32,7 @@ You can run the cloneDrives.ps1 script directly from its raw GitHub URL without 
 2. Search for "PowerShell" in your Start Menu.
 3. run as admin
 4. Execute the command: Copy and paste the following command into your PowerShell window and press Enter:
+
 `& ([scriptblock]::Create((irm "<https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/drives/cloneDrives.ps1>")))`
 
 ** This is an alias for Invoke-RestMethod, which downloads the content of the URL (the raw PowerShell script).
