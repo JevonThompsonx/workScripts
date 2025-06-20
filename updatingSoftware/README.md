@@ -4,13 +4,13 @@ This repository contains a collection of PowerShell scripts designed to automate
 
 ## Scripts Included
 
-1.  **`Update-Egnyte-v1.0.ps1`**
+1. **`Update-Egnyte-v1.0.ps1`**
     * **Version:** 1.0 (2025-05-29)
     * **Description:** This initial version downloads a specified `.msi` file (configured for Egnyte by default), installs it silently, and then removes the downloaded installer.
     * **Key Feature:** Basic download, install, and cleanup functionality.
     * **Limitation:** Does not check for running applications before attempting installation.
 
-2.  **`Update-Egnyte-v1.5.ps1`** 
+2. **`Update-Egnyte-v1.5.ps1`**
     * **Version:** 1.5 (2025-05-29)
     * **Description:** An updated version of the Egnyte installer script. It includes a crucial pre-flight check to see if specific critical applications (that might use Egnyte for storage) are running. If they are, the script will abort the update to prevent potential data loss or disruption.
     * **Key Features:**
@@ -18,13 +18,33 @@ This repository contains a collection of PowerShell scripts designed to automate
         * **Pre-flight check:** Verifies if critical applications (e.g., Word, Excel, AutoCAD, Vectorworks) are running and aborts if they are.
     * **Customization:** The list of `$criticalProcesses` can be modified to suit your environment.
 
-3.  **`Update-MSI-Application-Base-v1.5.ps1`**
+3. **`Update-MSI-Application-Base-v1.5.ps1`**
     * **Version:** 1.5 (2025-05-29)
     * **Description:** This script serves as a generic template based on `Update-Egnyte-v1.5.ps1`. It includes the pre-flight check for running applications and is intended to be adapted for updating various `.msi` applications.
     * **Key Features:**
         * Provides a foundational structure for downloading, silently installing, and cleaning up any `.msi` installer.
         * Includes the pre-flight check for running applications.
     * **Customization:** You **must** update the `$downloadUrl`, `$fileName`, and potentially the `$criticalProcesses` variables for the specific application you intend to manage.
+
+## Specialized Tools
+
+### Egnyte Nuke & Update
+
+This subdirectory (`/egnyteNukeAndUpdate`) contains specialized scripts designed for a more thorough management of Egnyte installations, including complete uninstallation and reinstallation.
+
+* **Description:** Scripts to completely remove Egnyte, all leftover files, and prompt for a reboot if necessary. This is followed by an option to install the latest version of Egnyte.
+* **Scripts Included:**
+    * `Egnyte-Nuke.ps1`: Deletes Egnyte and associated files.
+    * `Egnyte-Update.ps1`: Installs the latest version of Egnyte (specifically version 3.26 as of the last update).
+* **Usage:**
+    * **Offline:** Download the scripts to a local folder, navigate to that folder in PowerShell, run `Egnyte-Nuke.ps1`, reboot, and then run `Egnyte-Update.ps1`.
+    * **Online (without downloading):**
+        1.  Run the Nuke script directly: `& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/updatingSoftware/egnyteNukeAndUpdate/Egnyte-Nuke.ps1")))`
+        2.  Reboot your system.
+        3.  Install the latest Egnyte version, either by:
+            * Direct download and installation: `https://egnyte-cdn.egnyte.com/egnytedrive/win/en-us/latest/EgnyteConnectWin.msi`
+            * Running the Update script directly: `& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/updatingSoftware/egnyteNukeAndUpdate/Egnyte-Update.ps1")))`
+    * **Important Note:** After a fresh installation, you may need to manually map drives if required for your setup.
 
 ## Features
 
@@ -33,6 +53,7 @@ This repository contains a collection of PowerShell scripts designed to automate
 * **Cleanup:** Removes the downloaded installer file post-installation.
 * **Pre-flight Application Check (v1.5+):** Prevents installation if specified critical applications are running, avoiding potential conflicts or data issues.
 * **Configurable:** Key variables like download URL, local paths, and critical process names can be easily modified within the scripts.
+* **Egnyte Nuke Functionality:** Dedicated scripts for a complete uninstallation and reinstallation of Egnyte.
 
 ## Prerequisites
 
@@ -86,6 +107,11 @@ For `v1.5` scripts (`Update-Egnyte-v1.5.ps1` and `Update-MSI-Application-Base-v1
     ```
     (Use with caution and understand the security implications of execution policies.)
 
+    For the Egnyte Nuke & Update scripts, specifically, you might need to set a less restrictive policy:
+    ```powershell
+    Set-ExecutionPolicy -Scope Process Unrestricted
+    ```
+
 ## Exit Codes
 
 * `0`: Script completed successfully.
@@ -94,7 +120,7 @@ For `v1.5` scripts (`Update-Egnyte-v1.5.ps1` and `Update-MSI-Application-Base-v1
 
 ## Important Notes
 
-* **MSI Only:** These scripts are specifically designed for `.msi` installers. They will not work for `.exe` or other installer types without significant modification.
+* **MSI Only:** The core update scripts are specifically designed for `.msi` installers. They will not work for `.exe` or other installer types without significant modification.
 * **Administrator Privileges:** Installation of software typically requires administrator rights. Ensure the script is run in an elevated PowerShell session if necessary.
 * **Error Handling:** The scripts include basic `try/catch` blocks for error handling during download and installation. Check the console output for error messages.
 * **URL Validity:** Ensure the `$downloadUrl` is always pointing to the correct and current version of the installer you wish to deploy.
