@@ -1,4 +1,4 @@
-WorkScripts
+# WorkScripts
 This repository (workScripts) serves as a collection of various PowerShell and batch scripts designed to automate common system administration tasks, including software installation, updates, drive mapping, and Windows configuration.
 
 Each subfolder contains a set of related scripts and, where applicable, a dedicated README file with more detailed instructions and information.
