@@ -31,3 +31,4 @@ Powershells scripts are disabled by default. To enable for the current terminal 
 
 ## Adding Web apps
 1. 3CX Web app: https://ashleyvancecloud.3cx.us:5001/#/people
+2. Select pwa creator in top right - at the right of the search bar
