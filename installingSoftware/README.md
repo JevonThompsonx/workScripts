@@ -17,6 +17,9 @@ This version does quiet installs of .msi files with log files for each app in th
 
 ### 2.6: 
 
+Will write later
+
+------------------------------
 Powershells scripts are disabled by default. To enable for the current terminal session only: 
 
 `powershell -ExecutionPolicy Bypass`
