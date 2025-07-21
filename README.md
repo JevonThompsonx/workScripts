@@ -79,7 +79,7 @@ Scripts for initial Windows system configuration.
             ```
           * **Main Setup:**
             ```powershell
-            & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/InstallScripts/refs/heads/main/setup_script_windows_settings1.ps1")))
+            & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/setup_script_windows_settings1_3.ps1")))
             ```
           * **Google Credentials:**
             ```powershell
