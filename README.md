@@ -75,7 +75,7 @@ Scripts for initial Windows system configuration.
       * **Online:** Execute each script directly from GitHub.
           * **Enable Admin:**
             ```powershell
-            & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/InstallScripts/refs/heads/main/windows%20setup/enable_admin.bat")))
+            & ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/enable_admin.bat")))
             ```
           * **Main Setup:**
             ```powershell
