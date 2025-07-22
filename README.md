@@ -95,5 +95,5 @@ Scripts for initial Windows system configuration.
             ```
           * **Run all scripts:**
             ```powershell
-            & ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/Run-All-Work-Scripts.ps1")))
+            & ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/Run-All-Work-Scriptsv1.2.ps1")))
             ```
