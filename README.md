@@ -87,7 +87,7 @@ Scripts for initial Windows system configuration.
             ```
           * **Google Credentials:**
             ```powershell
-            & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/AllowGoogleCredentials.ps1")))
+            & ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/AllowGCWPv1.2.ps1")))")))
             ```
           * **Install all apps in C:\Archive folder:**
             ```powershell
