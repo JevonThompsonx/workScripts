@@ -18,7 +18,6 @@ disables hibernation, disables UAC, and enables Dark Mode.
 
 1. open powershell as admin - right click 
 2. Enable running powershell scripts if not already done: Set-ExecutionPolicy Bypass -Scope Process
-3. Enable admin account: & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/InstallScripts/refs/heads/main/windows%20setup/enable_admin.bat)))
-4. & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/InstallScripts/refs/heads/main/setup_script_windows_settings1.ps1")))
-5. & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/AllowGoogleCredentials.ps1")))
-
+3. Enable admin account: `& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/InstallScripts/refs/heads/main/windows%20setup/enable_admin.bat)))`
+4. Windows settings: `& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/InstallScripts/refs/heads/main/setup_script_windows_settings1.ps1")))`
+5. GCWP: `& ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/AllowGCWPv1.2.ps1")))`
