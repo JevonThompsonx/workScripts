@@ -2,6 +2,10 @@
 
 A collection of PowerShell and batch scripts to automate system administration tasks, including software management, drive mapping, and Windows configuration.
 
+The logic is separated to be plug and play as needed 
+
+**Skip to the bottom for the command of running all the scripts**
+
 -----
 
 ### **📂 drives**
@@ -88,4 +92,8 @@ Scripts for initial Windows system configuration.
           * **Install all apps in C:\Archive folder:**
             ```powershell
             & ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/installingSoftware/installAllArchiveSoftwarev2.6.ps1")))
+            ```
+          * **Run all scripts:**
+            ```powershell
+            & ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/Run-All-Work-Scripts.ps1")))
             ```
