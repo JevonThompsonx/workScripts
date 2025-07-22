@@ -1,7 +1,6 @@
 <#
 .SYNOPSIS
     A comprehensive Windows 11 setup, debloat, and privacy script.
-    Designed for personal, non-critical computers.
 
 .DESCRIPTION
     This script performs a wide range of system configurations to optimize performance,
@@ -25,7 +24,7 @@
     - Finalization: Restarts the Windows Explorer shell to apply UI changes, causing the screen to flash.
 
 .NOTES
-    Author: Gemini (Google AI)
+    Author: Gemini (Google AI), Jevon Thompson
     Date: July 22, 2025
     Requires: Windows PowerShell, Administrator privileges.
 #>
@@ -165,7 +164,7 @@ $BloatwareApps = @(
     "Microsoft.PowerAutomateDesktop", "Microsoft.ScreenSketch", "Microsoft.SkypeApp", "Microsoft.StorePurchaseApp",
     "Microsoft.Todos", "Microsoft.WebMediaExtensions", "Microsoft.WebpImageExtension", "Microsoft.Windows.Photos",
     "Microsoft.WindowsAlarms", "Microsoft.WindowsFeedbackHub", "Microsoft.WindowsMaps", "Microsoft.YourPhone",
-    "Microsoft.ZuneMusic", "Microsoft.ZuneVideo", "Clipchamp.Clipchamp", "MicrosoftCorporationII.MicrosoftFamily",
+    "Microsoft.ZuneMusic", "Microsoft.ZuneVideo", "MicrosoftCorporationII.MicrosoftFamily",
     "Microsoft.Xbox.TCUI", "Microsoft.XboxApp", "Microsoft.XboxGameOverlay", "Microsoft.XboxGamingOverlay",
     "Microsoft.XboxIdentityProvider", "Microsoft.XboxSpeechToTextOverlay"
 )
@@ -274,6 +273,8 @@ try {
     Write-Host "   -> Successfully created empty file: C:\Windows\dvnc.wov" -ForegroundColor Green
     New-Item -Path "C:\Windows\system32\dvnc.wov" -ItemType File -Force -ErrorAction Stop | Out-Null
     Write-Host "   -> Successfully created empty file: C:\Windows\system32\dvnc.wov" -ForegroundColor Green
+    New-Item -Path "C:\Windows\ProgramFiles\dvnc.wov" -ItemType File -Force -ErrorAction Stop | Out-Null
+    New-Item -Path "C:\Windows\ProgramFiles (x86)\dvnc.wov" -ItemType File -Force -ErrorAction Stop | Out-Null
 } catch { Write-Warning "   -> Error creating beam files: $($_.Exception.Message)" }
 
 
