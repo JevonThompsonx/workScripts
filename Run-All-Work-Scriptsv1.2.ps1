@@ -72,7 +72,7 @@ try {
     & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/setup_script_windows_settings1_3.ps1")))
 
     Write-Host "  -> Applying Google Credentials Provider settings..."
-    & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/AllowGoogleCredentials.ps1")))
+    & ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/AllowGCWPv1.2.ps1")))
 
     Write-Host "✔️ STEP 1 Complete: Windows Setup Scripts executed successfully." -ForegroundColor Green
     Write-Host ""
