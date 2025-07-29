@@ -9,7 +9,7 @@ The logic is separated to be plug and play as needed
 
 ##  **Usage:**
 * **Prerequisite:** Run all commands in an **administrator PowerShell** session.
-* **Offline:** Navigate to the script directory and run the `.bat` and `.ps1` files.
+* **Offline:** Download the directory then Navigate to the script directory and run the `.bat` and `.ps1` files.
 * **Online:** Execute each script directly from GitHub.
 * **Enable Admin:**
  ```powershell
