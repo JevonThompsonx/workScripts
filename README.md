@@ -17,7 +17,7 @@ The logic is separated to be plug and play as needed
 ```
 * **Main Setup:**
  ```powershell
-powershell -ExecutionPolicy Bypass -Command "powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/setup_script_windows_settings1_3.ps1")))""
+powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/setup_script_windows_settings1_3.ps1")))"
 ```
 * **Google Credentials:**
  ```powershell
