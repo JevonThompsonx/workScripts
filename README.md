@@ -83,17 +83,17 @@ Scripts for initial Windows system configuration.
             ```
           * **Main Setup:**
             ```powershell
-            & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/setup_script_windows_settings1_3.ps1")))
+            powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/setup_script_windows_settings1_3.ps1")))"
             ```
           * **Google Credentials:**
             ```powershell
-            & ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/AllowGCWPv1.2.ps1")))")))
+            powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/AllowGCWPv1.2.ps1")))")))"
             ```
           * **Install all apps in C:\Archive folder:**
             ```powershell
-            & ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/installingSoftware/installAllArchiveSoftwarev2.6.ps1")))
+            powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/installingSoftware/installAllArchiveSoftwarev2.6.ps1")))"
             ```
           * **Run all scripts:**
             ```powershell
-            & ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/Run-All-Work-Scriptsv1.2.ps1")))
+            powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Run-All-Work-Scriptsv1.2.ps1')))"
             ```
