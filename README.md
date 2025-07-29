@@ -4,9 +4,35 @@ A collection of PowerShell and batch scripts to automate system administration t
 
 The logic is separated to be plug and play as needed 
 
-**Skip to the bottom for the command of running all the scripts**
-
 -----
+
+
+##  **Usage:**
+* **Prerequisite:** Run all commands in an **administrator PowerShell** session.
+* **Offline:** Navigate to the script directory and run the `.bat` and `.ps1` files.
+* **Online:** Execute each script directly from GitHub.
+* **Enable Admin:**
+ ```powershell
+ powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/enable_admin.bat")))"
+```
+* **Main Setup:**
+ ```powershell
+powershell -ExecutionPolicy Bypass -Command "powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/setup_script_windows_settings1_3.ps1")))""
+```
+* **Google Credentials:**
+ ```powershell
+powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/AllowGCWPv1.2.ps1")))")))"
+```
+* **Install all apps in C:\Archive folder:**
+```powershell
+powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/installingSoftware/installAllArchiveSoftwarev2.6.ps1")))"
+```
+* **Run all scripts:**
+```powershell
+powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Run-All-Work-Scriptsv1.2.ps1')))"
+```
+
+## Boring stuff
 
 ### **📂 drives**
 
@@ -72,28 +98,3 @@ Scripts for initial Windows system configuration.
       * **`enable_admin.bat`:** Enables the local administrator account.
       * **`AllowGoogleCredentials.ps1`:** Configures settings for Google Credentials.
 
-  * **Usage:**
-
-      * **Prerequisite:** Run all commands in an **administrator PowerShell** session. Allow scripts if needed: `Set-ExecutionPolicy Bypass -Scope Process`
-      * **Offline:** Navigate to the script directory and run the `.bat` and `.ps1` files.
-      * **Online:** Execute each script directly from GitHub.
-          * **Enable Admin:**
-            ```powershell
-            & ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/enable_admin.bat")))
-            ```
-          * **Main Setup:**
-            ```powershell
-            powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/setup_script_windows_settings1_3.ps1")))"
-            ```
-          * **Google Credentials:**
-            ```powershell
-            powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/AllowGCWPv1.2.ps1")))")))"
-            ```
-          * **Install all apps in C:\Archive folder:**
-            ```powershell
-            powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/installingSoftware/installAllArchiveSoftwarev2.6.ps1")))"
-            ```
-          * **Run all scripts:**
-            ```powershell
-            powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Run-All-Work-Scriptsv1.2.ps1')))"
-            ```
