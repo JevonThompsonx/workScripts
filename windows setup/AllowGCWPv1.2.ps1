@@ -35,7 +35,7 @@ if (-not (Test-Path $registryPath)) {
 }
 Set-ItemProperty -Path $registryPath -Name $name -Value $domainsAllowedToLogin
 
-Write-Host "✔️ Google Credential Provider installation and configuration complete."
+Write-Host "Google Credential Provider installation and configuration complete."
 
 # We do NOT use 'exit' here.
 # The script will now end and correctly return control to the master script.
