@@ -34,7 +34,7 @@ powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "http
 ```
 * **Run all scripts:**
 ```powershell
-powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Run-All-Work-Scriptsv1.2.ps1')))"
+powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm 'https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/Run-All-Work-Scriptsv1.2.ps1')))"
 ```
 
 
