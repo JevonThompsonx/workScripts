@@ -175,7 +175,24 @@ else {
         }
     }
 }
+# Step 4: Install Software from C:\Archive (Conditional)
+#----------------------------------------------------------------------------------------------------
+Write-Host "STEP 5: Rmm install from C:\Archive\rmm..." -ForegroundColor Cyan
 
+$archivePath = "C:\Archive"
+$minFileCount = 10
+$installScriptUrl = "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/rmm.ps1"
+
+function Run-Archive-Install {
+    try {
+        Write-Host "  -> Running software installation script..." -ForegroundColor Green
+        & ([scriptblock]::Create((irm $installScriptUrl)))
+        Write-Host "✔️ STEP 4 Complete: Software installation script executed." -ForegroundColor Green
+    }
+    catch {
+        Write-Error "❌ An error occurred during the software installation."
+    }
+}
 Write-Host ""
 Write-Host "===========================================================" -ForegroundColor Cyan
 Write-Host "               MASTER SCRIPT FINISHED"
