@@ -23,6 +23,10 @@ powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "http
  ```powershell
 powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/AllowGCWPv1.2.ps1")))")))"
 ```
+* **Install rmm from C:\Archive\rmm:**
+```powershell
+powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/rmm.ps1")))"
+```
 * **Install all apps in C:\Archive folder:**
 ```powershell
 powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/installingSoftware/installAllArchiveSoftwarev2.6.ps1")))"
