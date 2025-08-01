@@ -1,61 +1,47 @@
 # BOLO - I have been modified for a new deployment method.
 
 # Main function to encapsulate the script's logic.
-function Get-AgentSelection {
-    # Define the target directory.
+function Start-AgentDeployment {
+    # Define the target directory and installer log path.
     $targetDirectory = "C:\Archive\rmm"
+    # Create a unique log file name in the user's temp directory.
+    $logPath = Join-Path $env:TEMP "MSI-Install-Log-$((Get-Date).ToString('yyyy-MM-dd_HH-mm-ss')).log"
     $regexPattern = '^([^-]+)-AV' # Regex to capture the text before "-AV".
 
     # --- Directory and File Validation ---
-    # Check if the directory exists.
-    if (-not (Test-Path -Path $targetDirectory -PathType Container)) {
+    while (-not (Test-Path -Path $targetDirectory -PathType Container)) {
         Write-Host "ERROR: The folder at '$targetDirectory' was not found." -ForegroundColor Red
-        $choice = Read-Host "Please place the required files in the directory. Do you want to try again? (y/n)"
-        if ($choice -eq 'y') {
-            # If the user says 'y', run the function again.
-            Get-AgentSelection
+        $choice = Read-Host "Please ensure the MSI files are present. Do you want to try again? (y/n)"
+        if ($choice.ToLower() -ne 'y') {
+            # If the user enters anything other than 'y', exit the script.
+            Write-Host "Exiting script." -ForegroundColor Yellow
+            return # Exit the function
         }
-        # If the user enters anything else, exit the script.
-        return
     }
 
-    # Get all files matching the pattern *-AV_*. This is more efficient than getting all files.
-    # The BaseName property is used so we don't have to worry about the file extension.
-    $files = Get-ChildItem -Path $targetDirectory -Filter "*-AV_*" -File | Select-Object FullName, BaseName
+    # Get all .msi files matching the pattern *-AV_*.
+    $files = Get-ChildItem -Path $targetDirectory -Filter "*-AV_*.msi" -File | Select-Object FullName, BaseName
 
-    # Check if any files were found.
     if ($null -eq $files) {
-        Write-Host "No agent files matching the '*-AV_*' pattern were found in '$targetDirectory'." -ForegroundColor Yellow
+        Write-Host "No agent MSI files (*-AV_*.msi) were found in '$targetDirectory'." -ForegroundColor Yellow
         Read-Host "Press Enter to exit."
         return
     }
 
     # --- Display Menu and Get User Input ---
-    Write-Host "Please select an agent from the list below:" -ForegroundColor Cyan
+    Write-Host "Please select an agent MSI to install:" -ForegroundColor Cyan
     
-    # Create a temporary array to hold the display names and full file paths.
     $selectionList = @()
     $i = 1
     foreach ($file in $files) {
-        # Use regex to extract the location name from the file's base name.
         if ($file.BaseName -match $regexPattern) {
-            # $Matches[1] contains the first captured group from our regex: ([^-]+)
-            $locationName = $Matches[1].Replace("_", " ") # Replace underscores with spaces for readability.
-            
-            # Display the numbered option to the user.
+            $locationName = $Matches[1].Replace("_", " ")
             Write-Host "  $i. $locationName"
-
-            # Add the file info to our selection list for later retrieval.
-            $selectionList += [pscustomobject]@{
-                ID = $i
-                Location = $locationName
-                FullPath = $file.FullName
-            }
+            $selectionList += [pscustomobject]@{ ID = $i; Location = $locationName; FullPath = $file.FullName }
             $i++
         }
     }
 
-    # Check if the selection list is empty after processing.
     if ($selectionList.Count -eq 0) {
         Write-Host "No files matched the expected naming convention to build the selection list." -ForegroundColor Yellow
         Read-Host "Press Enter to exit."
@@ -67,41 +53,70 @@ function Get-AgentSelection {
     while ($selection -lt 1 -or $selection -gt $selectionList.Count) {
         try {
             $input = Read-Host "Enter the number of your choice"
-            # Attempt to cast the user's input to an integer.
             $selection = [int]$input
             if ($selection -lt 1 -or $selection -gt $selectionList.Count) {
                 Write-Host "Invalid number. Please enter a number between 1 and $($selectionList.Count)." -ForegroundColor Red
             }
         }
         catch {
-            # This block runs if the user enters text that is not a number.
             Write-Host "Invalid input. Please enter a number." -ForegroundColor Red
-            $selection = 0 # Reset selection to ensure the loop continues.
+            $selection = 0
         }
     }
 
-    # Retrieve the chosen file using the validated selection.
-    # The -1 is because arrays are 0-indexed, while our list starts at 1.
     $chosenFile = $selectionList[$selection - 1]
 
-    # --- Final Output ---
+    # --- Execute the MSI Installer ---
     Clear-Host
-    Write-Host "You have selected:" -ForegroundColor Green
-    Write-Host "Location: $($chosenFile.Location)"
-    Write-Host "Full File Path: $($chosenFile.FullPath)"
-    
-    # You can now use the $chosenFile.FullPath variable to do something with the file.
-    # For example, to copy it:
-    # Copy-Item -Path $chosenFile.FullPath -Destination "C:\some\other\path\"
-    # Or to execute it (use with caution):
-    # & $chosenFile.FullPath
+    Write-Host "You have selected: $($chosenFile.Location)" -ForegroundColor Green
+    Write-Host "Preparing to install from: $($chosenFile.FullPath)"
+    Write-Host "A detailed log will be saved to: $logPath"
+    Write-Host "The installation will run silently in the background. Please wait..."
+
+    # Arguments for a silent MSI installation
+    # /i - Specifies the installer file
+    # /qn - Quiet mode with no user interface
+    # REBOOT=ReallySuppress - Prevents the installer from forcing a reboot
+    # /L*v - Creates a verbose log file at the specified path
+    $msiArgs = @(
+        "/i",
+        "`"$($chosenFile.FullPath)`"",
+        "/qn",
+        "REBOOT=ReallySuppress",
+        "/L*v",
+        "`"$logPath`""
+    )
+
+    try {
+        # Use Start-Process for robust execution. The -Wait flag makes the script
+        # pause until the installation process is complete.
+        Start-Process msiexec.exe -ArgumentList $msiArgs -Wait -Verb RunAs -ErrorAction Stop
+
+        Write-Host "--------------------------------------------------------" -ForegroundColor Gray
+        Write-Host "Installation process for '$($chosenFile.Location)' has completed." -ForegroundColor Green
+        Write-Host "Please check the log file for details and to confirm success."
+        # Optional: Open the log file for the user automatically.
+        # Invoke-Item $logPath
+    }
+    catch {
+        Write-Host "--------------------------------------------------------" -ForegroundColor Gray
+        Write-Host "An error occurred while trying to start the installation." -ForegroundColor Red
+        Write-Host "Error details: $($_.Exception.Message)"
+        Write-Host "Check that you are running PowerShell as an Administrator."
+    }
 }
 
 # --- Script Entry Point ---
-# Clear the screen and run the main function.
 Clear-Host
-Get-AgentSelection
+# Check if the script is running with Administrator privileges
+if (-not ([System.Security.Principal.WindowsPrincipal][System.Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Warning "This script requires Administrator privileges to install software."
+    Write-Warning "Please re-run this PowerShell session as an Administrator."
+    Read-Host "Press Enter to exit."
+    exit
+}
 
-# Pause the script at the end to see the output.
+Start-AgentDeployment
+
 Write-Host ""
 Read-Host "Script finished. Press Enter to exit."
