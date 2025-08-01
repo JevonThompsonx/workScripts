@@ -25,7 +25,7 @@ powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "http
 ```
 * **Install rmm from C:\Archive\rmm:**
 ```powershell
-powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/rmm.ps1")))"
+powershell -ExecutionPolicy Bypass -Command "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/rmm.ps1")))"
 ```
 * **Install all apps in C:\Archive folder:**
 ```powershell
