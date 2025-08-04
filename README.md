@@ -13,28 +13,28 @@ The logic is separated to be plug and play as needed
 * **Online:** Execute each script directly from GitHub.
 * **Enable Admin:**
  ```powershell
- powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/enable_admin.bat")))"
+powershell -ExecutionPolicy Bypass -Command "$tempFile = Join-Path $env:TEMP 'enable_admin.bat'; irm 'https://github.com/JevonThompsonx/workScripts/raw/main/windows%20setup/enable_admin.bat' -OutFile $tempFile; & $tempFile"
 ```
 * **Main Setup:**
  ```powershell
-powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/setup_script_windows_settings1_3.ps1")))"
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/windows%20setup/setup_script_windows_settings1_3.ps1')"
 ```
 * **Google Credentials:**
  ```powershell
-powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/AllowGCWPv1.2.ps1")))")))"
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://github.com/JevonThompsonx/workScripts/raw/main/windows%20setup/AllowGCWPv1.2.ps1')"
 ```
 * **Install rmm from C:\Archive\rmm:**
 ```powershell
-powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/rmm.ps1")))"
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://github.com/JevonThompsonx/workScripts/raw/main/windows%20setup/rmm.ps1')"
 ```
 
 * **Install all apps in C:\Archive folder:**
 ```powershell
-powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/installingSoftware/installAllArchiveSoftwarev2.6.ps1")))"
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/installingSoftware/installAllArchiveSoftwarev2.6.ps')"
 ```
 * **Run all scripts:**
 ```powershell
-powershell -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((irm 'https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/Run-All-Work-Scriptsv1.2.ps1')))"
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/Run-All-Work-Scriptsv1.2.ps1')"
 ```
 
 
