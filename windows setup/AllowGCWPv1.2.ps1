@@ -1,7 +1,7 @@
 <#
 This script downloads Google Credential Provider for Windows,
 installs it, and configures the allowed login domain.
-Version 2.0: Correctly waits for installer and does not exit the parent process.
+Version 1.2: Correctly waits for installer and does not exit the parent process.
 #>
 
 $domainsAllowedToLogin = "ashleyvance.com"
