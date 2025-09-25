@@ -150,55 +150,10 @@ try {
 } catch { Write-Warning "   -> An error occurred while applying privacy tweaks. Some settings may not apply." }
 
 
-#===================================================================================================
-# SECTION 3: BLOATWARE & APP REMOVAL
-#---------------------------------------------------------------------------------------------------
-Write-Host "`n[SECTION 3] Removing Bloatware and Unwanted Apps..." -ForegroundColor Cyan
-
-# Part A: Remove built-in AppX packages
-$BloatwareApps = @(
-    "Microsoft.549981C3F5F10", "Microsoft.BingNews", "Microsoft.BingWeather", "Microsoft.GetHelp",
-    "Microsoft.Getstarted", "Microsoft.HEIFImageExtension", "Microsoft.Microsoft3DViewer",
-    "Microsoft.MicrosoftOfficeHub", "Microsoft.MicrosoftSolitaireCollection", "Microsoft.MicrosoftStickyNotes",
-    "Microsoft.MixedReality.Portal", "Microsoft.Office.OneNote", "Microsoft.People",
-    "Microsoft.PowerAutomateDesktop", "Microsoft.ScreenSketch", "Microsoft.SkypeApp", "Microsoft.StorePurchaseApp",
-    "Microsoft.Todos", "Microsoft.WebMediaExtensions", "Microsoft.WebpImageExtension", "Microsoft.Windows.Photos",
-    "Microsoft.WindowsAlarms", "Microsoft.WindowsFeedbackHub", "Microsoft.WindowsMaps", "Microsoft.YourPhone",
-    "Microsoft.ZuneMusic", "Microsoft.ZuneVideo", "MicrosoftCorporationII.MicrosoftFamily",
-    "Microsoft.Xbox.TCUI", "Microsoft.XboxApp", "Microsoft.XboxGameOverlay", "Microsoft.XboxGamingOverlay",
-    "Microsoft.XboxIdentityProvider", "Microsoft.XboxSpeechToTextOverlay"
-)
-Write-Host " - Removing modern (AppX) packages. This may take a moment..."
-foreach ($App in $BloatwareApps) {
-    Get-AppxPackage -Name $App -AllUsers | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue
-    Get-AppxProvisionedPackage -Online | Where-Object { $_.PackageName -like "*$App*" } | Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue
-}
-Write-Host "   -> AppX package removal process completed." -ForegroundColor Green
-
-# Part B: Uninstall specific programs (Teams, OneDrive)
-Write-Host " - Running specific uninstallers for Teams and OneDrive..."
-# Uninstall Microsoft Teams
-try {
-    Get-AppxPackage *MicrosoftTeams* | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue
-    Get-Package "Teams Machine-Wide Installer" -ErrorAction SilentlyContinue | Uninstall-Package -Force -ErrorAction SilentlyContinue
-    Write-Host "   -> Microsoft Teams uninstall routines executed." -ForegroundColor Green
-} catch { Write-Warning "   -> A non-critical error occurred during Teams removal."}
-
-# Uninstall OneDrive
-$oneDriveUninstaller = Get-ChildItem -Path "$env:SystemRoot\SysWOW64", "$env:SystemRoot\System32" -Filter "OneDriveSetup.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
-if ($oneDriveUninstaller) {
-    try {
-        Start-Process $oneDriveUninstaller.FullName -ArgumentList "/uninstall" -Wait
-        $gpoPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OneDrive"
-        if (-not (Test-Path $gpoPath)) { New-Item -Path $gpoPath -Force | Out-Null }
-        Set-ItemProperty -Path $gpoPath -Name "DisableFileSyncNGSC" -Value 1 -Type DWORD -Force
-        Write-Host "   -> OneDrive uninstaller executed and GPO set to prevent reinstall." -ForegroundColor Green
-    } catch { Write-Warning "   -> Error during OneDrive uninstall: $($_.Exception.Message)"}
-} else { Write-Warning "   -> OneDrive setup file not found. Skipping uninstall." }
 
 
 #===================================================================================================
-# SECTION 4: UI, EXPLORER, & DESKTOP CUSTOMIZATION
+# SECTION 3: UI, EXPLORER, & DESKTOP CUSTOMIZATION
 #---------------------------------------------------------------------------------------------------
 Write-Host "`n[SECTION 4] Applying UI & Desktop Experience Tweaks..." -ForegroundColor Cyan
 
@@ -252,7 +207,7 @@ try {
 
 
 #===================================================================================================
-# SECTION 5: FILE SYSTEM & MISCELLANEOUS SETUP
+# SECTION 4: FILE SYSTEM & MISCELLANEOUS SETUP
 #---------------------------------------------------------------------------------------------------
 Write-Host "`n[SECTION 5] Performing File System Setup..." -ForegroundColor Cyan
 
