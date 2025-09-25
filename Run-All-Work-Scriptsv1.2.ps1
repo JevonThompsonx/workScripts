@@ -175,9 +175,55 @@ else {
         }
     }
 }
-# Step 4: Install Software from C:\Archive (Conditional)
+
+# Step 5: Windows Debloat (User Choice)
 #----------------------------------------------------------------------------------------------------
-Write-Host "STEP 5: Rmm install from C:\Archive\rmm..." -ForegroundColor Cyan
+Write-Host "STEP 5: Windows Debloat Options..." -ForegroundColor Cyan
+
+Write-Host "You can choose to run one of the following debloat scripts:" -ForegroundColor Yellow
+Write-Host "  1. Basic Debloat (general cleanup)" -ForegroundColor Gray
+Write-Host "  2. Engineering Debloat (for engineering workflows)" -ForegroundColor Gray
+Write-Host "  3. Skip (do not run any debloat)" -ForegroundColor Gray
+
+while ($true) {
+    $debloatChoice = Read-Host "Please enter 1 (Basic), 2 (Engineering), or 3 (Skip)"
+    
+    switch ($debloatChoice) {
+        '1' {
+            Write-Host "  -> Running Basic Debloat..." -ForegroundColor Green
+            try {
+                & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/win11Debloat.ps1")))
+                Write-Host "✔️ Basic Debloat completed successfully." -ForegroundColor Green
+            }
+            catch {
+                Write-Error "❌ An error occurred while running Basic Debloat."
+            }
+            break
+        }
+        '2' {
+            Write-Host "  -> Running Engineering Debloat..." -ForegroundColor Green
+            try {
+                & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/engineeringDebloat.ps1")))
+                Write-Host "✔️ Engineering Debloat completed successfully." -ForegroundColor Green
+            }
+            catch {
+                Write-Error "❌ An error occurred while running Engineering Debloat."
+            }
+            break
+        }
+        '3' {
+            Write-Host "  -> Skipping debloat step as requested." -ForegroundColor Yellow
+            break
+        }
+        default {
+            Write-Warning "Invalid input. Please enter 1, 2, or 3."
+        }
+    }
+}
+
+# Step 6: Install Software from C:\Archive (Conditional)
+#----------------------------------------------------------------------------------------------------
+Write-Host "STEP 6: Rmm install from C:\Archive\rmm..." -ForegroundColor Cyan
 
 $archivePath = "C:\Archive"
 $minFileCount = 10
