@@ -11,13 +11,27 @@ The logic is separated to be plug and play as needed
 * **Prerequisite:** Run all commands in an **administrator PowerShell** session.
 * **Offline:** Download the directory then Navigate to the script directory and run the `.bat` and `.ps1` files.
 * **Online:** Execute each script directly from GitHub.
-* **Enable Admin:**
- ```powershell
-powershell -ExecutionPolicy Bypass -Command "$tempFile = Join-Path $env:TEMP 'enable_admin.bat'; irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/windows%20setup/enable_admin.bat' -OutFile $tempFile; & $tempFile"
+
+
+* **Run all scripts:**
+```powershell
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Run-All-Work-Scriptsv1.2.ps1')"
 ```
 * **Main Setup:**
  ```powershell
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/windows%20setup/setup_script_windows_settings1_3.ps1')"
+```
+* **Enable Admin:**
+ ```powershell
+powershell -ExecutionPolicy Bypass -Command "$tempFile = Join-Path $env:TEMP 'enable_admin.bat'; irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/windows%20setup/enable_admin.bat' -OutFile $tempFile; & $tempFile"
+```
+* **Debloat:**
+```powershell
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/win11Debloat.ps1')"
+```
+* **Engineering debloat:**
+```powershell
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/engineeringDebloat.ps1')"
 ```
 * **Google Credentials:**
  ```powershell
@@ -27,14 +41,9 @@ powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercon
 ```powershell
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/windows%20setup/rmm.ps1')"
 ```
-
 * **Install all apps in C:\Archive folder:**
 ```powershell
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/installingSoftware/installAllArchiveSoftwarev2.6.ps1')"
-```
-* **Run all scripts:**
-```powershell
-powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Run-All-Work-Scriptsv1.2.ps1')"
 ```
 
 
