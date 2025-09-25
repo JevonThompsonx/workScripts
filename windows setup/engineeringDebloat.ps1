@@ -129,6 +129,7 @@ $EngineeringSoftware = @{
         "HydroCAD*"
         "HydroCad*"
         "HydroCAD Stormwater*"
+        "HydroCAD"
         "Applied Microcomputer Systems*"
     )
     
