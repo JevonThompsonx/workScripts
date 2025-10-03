@@ -27,7 +27,7 @@ powershell -ExecutionPolicy Bypass -Command "$tempFile = Join-Path $env:TEMP 'en
 ```
 * **Debloat:**
 ```powershell
-powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/win11Debloat.ps1')"
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://debloat.raphi.re/')"
 ```
 * **Engineering debloat:**
 ```powershell
