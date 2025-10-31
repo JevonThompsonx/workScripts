@@ -30,13 +30,16 @@ Write-Host "===========================================================" -Foregr
 Write-Host "         STARTING MASTER WORK SCRIPT AUTOMATION"
 Write-Host "===========================================================" -ForegroundColor Cyan
 Write-Host ""
+Write-Host "IMPORTANT: Make sure you're running PowerShell as Administrator!" -ForegroundColor Yellow
+Write-Host ""
 
 # Verify the script is running in an elevated (Administrator) session.
 if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
-    Write-Warning "This script requires Administrator privileges. Please re-launch in an elevated PowerShell session."
-    # Pause for 5 seconds before exiting to allow user to read the message.
-    Start-Sleep -Seconds 5
-    exit
+    Write-Error "❌ This script requires Administrator privileges!"
+    Write-Warning "Please right-click PowerShell and select 'Run as Administrator', then try again."
+    # Pause for 10 seconds before exiting to allow user to read the message.
+    Start-Sleep -Seconds 10
+    exit 1
 }
 else {
     Write-Host "✔️ Administrator privileges confirmed." -ForegroundColor Green
@@ -221,23 +224,31 @@ while ($true) {
     }
 }
 
-# Step 6: Install Software from C:\Archive (Conditional)
+# Step 6: Install RMM from C:\Archive\rmm
 #----------------------------------------------------------------------------------------------------
-Write-Host "STEP 6: Rmm install from C:\Archive\rmm..." -ForegroundColor Cyan
+Write-Host "STEP 6: RMM install from C:\Archive\rmm..." -ForegroundColor Cyan
 
-$archivePath = "C:\Archive"
-$minFileCount = 10
+$rmmPath = "C:\Archive\rmm"
 $installScriptUrl = "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/rmm.ps1"
 
-function Run-Archive-Install {
+function Run-RMM-Install {
     try {
-        Write-Host "  -> Running software installation script..." -ForegroundColor Green
+        Write-Host "  -> Running RMM installation script..." -ForegroundColor Green
         & ([scriptblock]::Create((irm $installScriptUrl)))
-        Write-Host "✔️ STEP 4 Complete: Software installation script executed." -ForegroundColor Green
+        Write-Host "✔️ STEP 6 Complete: RMM installation script executed." -ForegroundColor Green
     }
     catch {
-        Write-Error "❌ An error occurred during the software installation."
+        Write-Error "❌ An error occurred during the RMM installation."
     }
+}
+
+# Check if RMM folder exists before attempting install
+if (Test-Path -Path $rmmPath) {
+    Write-Host "  -> RMM folder found. Proceeding with installation."
+    Run-RMM-Install
+}
+else {
+    Write-Host "  -> RMM folder not found at $rmmPath. Skipping RMM installation." -ForegroundColor Yellow
 }
 Write-Host ""
 Write-Host "===========================================================" -ForegroundColor Cyan

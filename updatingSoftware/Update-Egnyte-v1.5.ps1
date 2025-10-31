@@ -3,6 +3,16 @@
 # This script only works for .msi files.
 # It will download the file, install it, and then clean up the installer file.
 # It will check for running applications.
+
+#Requires -RunAsAdministrator
+
+# Verify Administrator privileges
+if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+    Write-Error "This script requires Administrator privileges. Please run as Administrator."
+    Pause
+    Exit 1
+}
+
 # --- Configuration ---
 $downloadUrl = "https://egnyte-cdn.egnyte.com/egnytedrive/win/en-us/3.25.1/EgnyteDesktopApp_3.25.1_161.msi"
 $localDirectory = "C:\Archive"

@@ -2,10 +2,22 @@
 # Run this script as Administrator in PowerShell
 # This script performs DEEP removal including registry, temp files, and services
 
+#Requires -RunAsAdministrator
+
 Write-Host "Engineering Software Complete Removal Tool" -ForegroundColor Green
 Write-Host "=========================================" -ForegroundColor Green
+Write-Host ""
+
+# Verify Administrator privileges
+if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+    Write-Error "This script requires Administrator privileges. Please run as Administrator."
+    Pause
+    Exit 1
+}
+
 Write-Host "WARNING: This will COMPLETELY remove engineering software and all data!" -ForegroundColor Red
 Write-Host "Make sure to backup any important project files first!" -ForegroundColor Yellow
+Write-Host ""
 
 # Engineering software to remove - ALL VERSIONS INCLUDED
 $EngineeringSoftware = @{
@@ -388,51 +400,96 @@ function Stop-EngineeringServices {
     }
 }
 
-# Function to remove software using Windows Installer
+# Function to remove software using registry-based uninstall (MUCH faster and safer than Win32_Product)
 function Remove-EngineeringSoftware {
     param($SoftwareCategories)
-    
+
     Write-Host "`nRemoving engineering software..." -ForegroundColor Cyan
-    
+    Write-Host "Using registry-based removal for better performance and safety..." -ForegroundColor Yellow
+
     foreach ($Category in $SoftwareCategories.Keys) {
         Write-Host "`nProcessing $Category software..." -ForegroundColor Yellow
-        
+
         foreach ($SoftwareName in $SoftwareCategories[$Category]) {
             try {
-                # Remove via WMI (Windows Management Instrumentation)
-                $Products = Get-WmiObject -Class Win32_Product | Where-Object {$_.Name -like $SoftwareName}
-                foreach ($Product in $Products) {
-                    Write-Host "Uninstalling: $($Product.Name)" -ForegroundColor Green
-                    $Product.Uninstall() | Out-Null
-                }
-                
-                # Remove via Registry (Uninstall strings)
-                $UninstallKeys = Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall" |
-                    Get-ItemProperty | Where-Object {$_.DisplayName -like $SoftwareName}
-                
-                foreach ($Key in $UninstallKeys) {
-                    if ($Key.UninstallString) {
-                        Write-Host "Removing: $($Key.DisplayName)" -ForegroundColor Green
-                        try {
-                            if ($Key.UninstallString -match "msiexec") {
-                                $GUID = ($Key.UninstallString -split "/I")[1] -replace "[{}]", ""
-                                Start-Process "msiexec.exe" -ArgumentList "/X$GUID /quiet /norestart" -Wait -NoNewWindow
-                            } else {
-                                $UninstallCmd = $Key.UninstallString -replace '"', ''
-                                Start-Process $UninstallCmd -ArgumentList "/S /quiet" -Wait -NoNewWindow -ErrorAction SilentlyContinue
+                # Search in both 64-bit and 32-bit registry locations
+                $UninstallPaths = @(
+                    "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+                    "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall",
+                    "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
+                )
+
+                $FoundSoftware = $false
+
+                foreach ($Path in $UninstallPaths) {
+                    try {
+                        $UninstallKeys = Get-ChildItem -Path $Path -ErrorAction SilentlyContinue |
+                            Get-ItemProperty -ErrorAction SilentlyContinue |
+                            Where-Object {$_.DisplayName -like $SoftwareName}
+
+                        foreach ($Key in $UninstallKeys) {
+                            if ($Key.UninstallString) {
+                                $FoundSoftware = $true
+                                Write-Host "  Found: $($Key.DisplayName)" -ForegroundColor Green
+
+                                try {
+                                    # Handle MSI-based uninstalls
+                                    if ($Key.UninstallString -match "msiexec") {
+                                        # Extract GUID from uninstall string
+                                        if ($Key.UninstallString -match '\{[a-fA-F0-9\-]+\}') {
+                                            $GUID = $Matches[0]
+                                            Write-Host "    Uninstalling via msiexec: $GUID" -ForegroundColor Cyan
+                                            Start-Process "msiexec.exe" -ArgumentList "/X$GUID /quiet /norestart" -Wait -NoNewWindow -ErrorAction SilentlyContinue
+                                        }
+                                    }
+                                    # Handle EXE-based uninstalls
+                                    else {
+                                        $UninstallCmd = $Key.UninstallString -replace '"', ''
+                                        Write-Host "    Uninstalling via executable: $UninstallCmd" -ForegroundColor Cyan
+
+                                        # Try common silent uninstall switches
+                                        $SilentSwitches = @("/S", "/s", "/quiet", "/SILENT", "/VERYSILENT", "-silent")
+                                        $Success = $false
+
+                                        foreach ($Switch in $SilentSwitches) {
+                                            try {
+                                                Start-Process $UninstallCmd -ArgumentList $Switch -Wait -NoNewWindow -ErrorAction SilentlyContinue
+                                                $Success = $true
+                                                break
+                                            }
+                                            catch {
+                                                continue
+                                            }
+                                        }
+
+                                        if (-not $Success) {
+                                            Write-Host "    Could not silently uninstall. May require manual removal." -ForegroundColor Yellow
+                                        }
+                                    }
+                                }
+                                catch {
+                                    Write-Host "    Error uninstalling: $($Key.DisplayName) - $($_.Exception.Message)" -ForegroundColor Yellow
+                                }
                             }
                         }
-                        catch {
-                            Write-Host "Manual uninstall required for: $($Key.DisplayName)" -ForegroundColor Red
-                        }
                     }
+                    catch {
+                        # Silently continue if registry path doesn't exist or is inaccessible
+                        continue
+                    }
+                }
+
+                if (-not $FoundSoftware) {
+                    Write-Host "  No matches found for pattern: $SoftwareName" -ForegroundColor Gray
                 }
             }
             catch {
-                Write-Host "Could not remove $SoftwareName - May not be installed" -ForegroundColor Yellow
+                Write-Host "  Error processing $SoftwareName - $($_.Exception.Message)" -ForegroundColor Yellow
             }
         }
     }
+
+    Write-Host "`nSoftware removal process completed." -ForegroundColor Green
 }
 
 # Function to clean registry entries
@@ -655,21 +712,53 @@ do {
             $BentleyOnly = @{"BentleyMicrostation" = $EngineeringSoftware["BentleyMicrostation"]}
             Remove-EngineeringSoftware $BentleyOnly
         }
-        "7" { 
+        "7" {
             Write-Host "`nScanning for installed engineering software..." -ForegroundColor Cyan
-            $InstalledSoftware = Get-WmiObject -Class Win32_Product | Where-Object {
-                $_.Name -like "*AutoCAD*" -or $_.Name -like "*Autodesk*" -or 
-                $_.Name -like "*Vectorworks*" -or $_.Name -like "*Bluebeam*" -or
-                $_.Name -like "*SolidWorks*" -or $_.Name -like "*Civil 3D*" -or
-                $_.Name -like "*Bentley*" -or $_.Name -like "*MicroStation*" -or
-                $_.Name -like "*ANSYS*" -or $_.Name -like "*MATLAB*" -or
-                $_.Name -like "*ArcGIS*" -or $_.Name -like "*SketchUp*"
-            } | Select-Object Name, Version | Sort-Object Name
-            
+            Write-Host "This may take a moment..." -ForegroundColor Yellow
+
+            $EngineeringPatterns = @(
+                "*AutoCAD*", "*Autodesk*", "*Vectorworks*", "*Bluebeam*",
+                "*SolidWorks*", "*Civil 3D*", "*Bentley*", "*MicroStation*",
+                "*ANSYS*", "*MATLAB*", "*ArcGIS*", "*SketchUp*", "*Rhino*",
+                "*Tekla*", "*ETABS*", "*SAP2000*", "*RISA*", "*Revit*"
+            )
+
+            $InstalledSoftware = @()
+
+            # Search in both 64-bit and 32-bit registry locations
+            $UninstallPaths = @(
+                "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+                "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
+            )
+
+            foreach ($Path in $UninstallPaths) {
+                try {
+                    $Apps = Get-ChildItem -Path $Path -ErrorAction SilentlyContinue |
+                        Get-ItemProperty -ErrorAction SilentlyContinue |
+                        Where-Object {
+                            $DisplayName = $_.DisplayName
+                            $DisplayName -and ($EngineeringPatterns | Where-Object {$DisplayName -like $_})
+                        } |
+                        Select-Object DisplayName, DisplayVersion, Publisher |
+                        Where-Object {$_.DisplayName} # Remove entries without DisplayName
+
+                    $InstalledSoftware += $Apps
+                }
+                catch {
+                    # Silently continue if registry path doesn't exist
+                    continue
+                }
+            }
+
+            # Remove duplicates and sort
+            $InstalledSoftware = $InstalledSoftware | Sort-Object DisplayName -Unique
+
             if ($InstalledSoftware.Count -gt 0) {
-                $InstalledSoftware | Format-Table -AutoSize
-            } else {
-                Write-Host "No engineering software found." -ForegroundColor Green
+                Write-Host "`nFound $($InstalledSoftware.Count) engineering software package(s):`n" -ForegroundColor Green
+                $InstalledSoftware | Format-Table -Property DisplayName, DisplayVersion, Publisher -AutoSize
+            }
+            else {
+                Write-Host "`nNo engineering software found." -ForegroundColor Green
             }
         }
         "8" { 

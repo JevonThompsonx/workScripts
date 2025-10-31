@@ -1,5 +1,14 @@
+#Requires -RunAsAdministrator
+
 # Set the directory containing the installation files
 $INSTALL_DIR = "C:\Archive" # Base directory for installation files
+
+# Verify Administrator privileges
+if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+    Write-Error "This script requires Administrator privileges. Please run as Administrator."
+    Pause
+    Exit 1
+}
 
 # --- Log File Configuration ---
 # Define the name of the log subfolder
@@ -120,27 +129,47 @@ else {
 }
 
 Write-Output ""
-Write-Output "--- Executing Online Debloat Script ---"
-$debloatLogFileName = "debloat_script_$($timestamp).log"
-$fullDebloatLogPath = Join-Path -Path $LOG_FOLDER_PATH -ChildPath $debloatLogFileName
+Write-Output "--- Optional: Online Debloat Script ---"
+Write-Output "NOTICE: This step will download and execute an external script from 'https://debloat.raphi.re/'" -ForegroundColor Yellow
+Write-Output "This is an OPTIONAL step. External scripts can pose security risks." -ForegroundColor Yellow
+Write-Output ""
 
-Write-Output "Attempting to run online debloat script from 'https://debloat.raphi.re/'."
-Write-Output "Debloat script output will be logged to: '$fullDebloatLogPath'"
+$runDebloat = Read-Host "Do you want to run the external debloat script? (y/N)"
 
-try {
-    # Download and execute the script, redirecting output to a log file
-    # Using Start-Transcript here is a good way to capture all console output from the invoked script.
-    Start-Transcript -Path $fullDebloatLogPath -Append
-    & ([scriptblock]::Create((irm "https://debloat.raphi.re/")))
-    Stop-Transcript
+if ($runDebloat -eq "y" -or $runDebloat -eq "Y") {
+    $debloatLogFileName = "debloat_script_$($timestamp).log"
+    $fullDebloatLogPath = Join-Path -Path $LOG_FOLDER_PATH -ChildPath $debloatLogFileName
 
-    # Note: It's difficult to get an exit code directly from an invoked script block that doesn't set $LASTEXITCODE
-    # explicitly, but we can check for errors during its execution.
-    Write-Output "Online debloat script execution completed. Please check log for details: '$fullDebloatLogPath'"
+    Write-Output "Attempting to run online debloat script from 'https://debloat.raphi.re/'."
+    Write-Output "Debloat script output will be logged to: '$fullDebloatLogPath'"
+
+    try {
+        # Test if the URL is accessible before executing
+        Write-Output "Testing connection to debloat script..."
+        $testConnection = Invoke-WebRequest -Uri "https://debloat.raphi.re/" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+
+        if ($testConnection.StatusCode -eq 200) {
+            # Download and execute the script, redirecting output to a log file
+            Start-Transcript -Path $fullDebloatLogPath -Append
+            & ([scriptblock]::Create((irm "https://debloat.raphi.re/")))
+            Stop-Transcript
+
+            Write-Output "Online debloat script execution completed. Please check log for details: '$fullDebloatLogPath'"
+        }
+        else {
+            Write-Warning "Could not connect to debloat script. Skipping this step."
+        }
+    }
+    catch {
+        if (Get-Command Stop-Transcript -ErrorAction SilentlyContinue) {
+            Stop-Transcript -ErrorAction SilentlyContinue # Ensure transcript is stopped even on error
+        }
+        Write-Error "Failed to download or execute the online debloat script. Error: $($_.Exception.Message)"
+        Write-Warning "This could be due to network issues or the script being unavailable. Continuing with installation..."
+    }
 }
-catch {
-    Stop-Transcript # Ensure transcript is stopped even on error
-    Write-Error "Failed to download or execute the online debloat script. Error: $($_.Exception.Message). Please check your internet connection or the script source."
+else {
+    Write-Output "Skipping external debloat script as requested."
 }
 Write-Output "" # Blank line for readability
 
