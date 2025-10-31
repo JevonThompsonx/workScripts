@@ -85,6 +85,97 @@ catch {
 }
 
 
+# Step 1.5: Laptop-Specific Power Settings
+#----------------------------------------------------------------------------------------------------
+Write-Host "STEP 1.5: Configuring Laptop-Specific Power Settings..." -ForegroundColor Cyan
+
+# Detect if the device is a laptop by checking for the presence of a battery
+$isLaptop = $false
+try {
+    $battery = Get-CimInstance -ClassName Win32_Battery -ErrorAction SilentlyContinue
+    if ($battery) {
+        $isLaptop = $true
+        Write-Host "  -> Laptop detected (battery found)." -ForegroundColor Green
+    }
+    else {
+        Write-Host "  -> Desktop/workstation detected (no battery found). Skipping laptop-specific settings." -ForegroundColor Yellow
+    }
+}
+catch {
+    Write-Warning "Could not detect device type. Assuming desktop."
+}
+
+if ($isLaptop) {
+    # Configure lid close action to "Do Nothing" when on AC power
+    Write-Host "  -> Configuring lid close action for laptops..."
+    try {
+        # Get the active power plan GUID
+        $activePlan = (Get-CimInstance -ClassName Win32_PowerPlan -Namespace root\cimv2\power | Where-Object { $_.IsActive -eq $true }).InstanceID
+        $planGuid = ($activePlan -split '[{}]')[1]
+
+        # Lid close action settings
+        # Sub-group GUID for "Power buttons and lid"
+        $lidSubGroup = "4f971e89-eebd-4455-a8de-9e59040e7347"
+        # Setting GUID for "Lid close action"
+        $lidCloseSetting = "5ca83367-6e45-459f-a27b-476b1d01c936"
+        # Value 0 = Do Nothing, 1 = Sleep, 2 = Hibernate, 3 = Shut down
+
+        # Set lid close action to "Do Nothing" (0) when plugged in (AC)
+        powercfg -setacvalueindex $planGuid $lidSubGroup $lidCloseSetting 0
+        Write-Host "  -> Lid close action set to 'Do Nothing' when on AC power." -ForegroundColor Green
+    }
+    catch {
+        Write-Warning "Could not configure lid close action: $($_.Exception.Message)"
+    }
+}
+
+# Check if High Performance power plan exists and is active
+Write-Host "  -> Checking power plan configuration..."
+try {
+    $highPerfPlan = Get-CimInstance -ClassName Win32_PowerPlan -Namespace root\cimv2\power | Where-Object { $_.ElementName -like '*High performance*' }
+    $activePlan = Get-CimInstance -ClassName Win32_PowerPlan -Namespace root\cimv2\power | Where-Object { $_.IsActive -eq $true }
+
+    if (-not $highPerfPlan) {
+        Write-Host "  -> High Performance power plan not available. Adjusting screen and sleep settings..." -ForegroundColor Yellow
+
+        # Get the active power plan GUID
+        $planGuid = ($activePlan.InstanceID -split '[{}]')[1]
+
+        # Display sub-group GUID
+        $displaySubGroup = "7516b95f-f776-4464-8c53-06167f40cc99"
+        # Screen timeout setting GUID
+        $screenTimeoutSetting = "3c0bc021-c8a8-4e07-a973-6b14cbcb2b7e"
+
+        # Sleep sub-group GUID
+        $sleepSubGroup = "238c9fa8-0aad-41ed-83f4-97be242c8f20"
+        # Sleep timeout setting GUID
+        $sleepTimeoutSetting = "29f6c1db-86da-48c5-9fdb-f2b67b1f44da"
+
+        # Set screen timeout to 30 minutes (1800 seconds) for both AC and DC
+        powercfg -setacvalueindex $planGuid $displaySubGroup $screenTimeoutSetting 1800
+        powercfg -setdcvalueindex $planGuid $displaySubGroup $screenTimeoutSetting 1800
+        Write-Host "  -> Screen timeout set to 30 minutes." -ForegroundColor Green
+
+        # Set sleep timeout to never (0) for both AC and DC
+        powercfg -setacvalueindex $planGuid $sleepSubGroup $sleepTimeoutSetting 0
+        powercfg -setdcvalueindex $planGuid $sleepSubGroup $sleepTimeoutSetting 0
+        Write-Host "  -> Sleep timeout set to 'Never'." -ForegroundColor Green
+
+        # Apply the changes
+        powercfg -setactive $planGuid
+    }
+    else {
+        Write-Host "  -> High Performance power plan detected. No additional timeout adjustments needed." -ForegroundColor Green
+    }
+}
+catch {
+    Write-Warning "Could not configure power plan settings: $($_.Exception.Message)"
+}
+
+Write-Host "✔️ STEP 1.5 Complete: Laptop-specific power settings configured." -ForegroundColor Green
+Write-Host ""
+
+
 # Step 2: Cloning Egnyte Drives
 #----------------------------------------------------------------------------------------------------
 Write-Host "STEP 2: Running Egnyte Drive Cloning Script..." -ForegroundColor Cyan
