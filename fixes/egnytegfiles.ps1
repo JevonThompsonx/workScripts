@@ -66,4 +66,8 @@ foreach ($key in $fileExtsKeys) {
 }
 
 Write-Host ""
-Write-Host "Done. You may need to restart Explorer or log out/in for changes to take effect." -ForegroundColor Cyan
+Write-Host "Done. Next steps: " -ForegroundColor Cyan
+Write-Host "1. Uninstall Egnyte " -ForegroundColor Cyan
+Write-Host "2. Reboot " -ForegroundColor Cyan
+Write-Host "3. Reinstall egnyte. Link: https://egnyte-cdn.egnyte.com/egnytedrive/win/en-us/latest/EgnyteConnectWin.msi" -ForegroundColor Cyan
+Write-Host "4. Try running a google doc,slide or sheet again" -ForegroundColor Cyan
