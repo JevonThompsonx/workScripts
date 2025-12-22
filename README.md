@@ -45,6 +45,10 @@ powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercon
 ```powershell
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/installingSoftware/installAllArchiveSoftwarev2.6.ps1')"
 ```
+* **Google egnyte fix**
+```powershell
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/fixes/egnytegfiles.ps1')"
+```
 
 
 ## Boring stuff
