@@ -19,7 +19,7 @@ powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercon
 ```
 * **Main Setup:**
  ```powershell
-powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/windows%20setup/setup_script_windows_settings1_3.ps1')"
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/setup_scriptv1.5.ps1')"
 ```
 * **Enable Admin:**
  ```powershell
