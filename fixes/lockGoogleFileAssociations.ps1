@@ -1,33 +1,39 @@
-# Run as Administrator - AFTER Egnyte reinstall and confirming it works
+# Run as Administrator
+
+$currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+Write-Host "Locking associations for user: $currentUser" -ForegroundColor Cyan
 
 $keysToLock = @(
-    "HKCR:\.gdoc",
-    "HKCR:\.gsheet",
-    "HKCR:\.gslides"
+    "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.gdoc\UserChoice",
+    "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.gsheet\UserChoice",
+    "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.gslides\UserChoice"
 )
-
-if (!(Test-Path "HKCR:")) {
-    New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT | Out-Null
-}
 
 foreach ($keyPath in $keysToLock) {
     if (Test-Path $keyPath) {
-        $key = Get-Item $keyPath
         $acl = Get-Acl $keyPath
         
-        # Deny write access to Users group (Google Drive runs as user)
+        # We must DISABLE inheritance so the Deny rule sticks effectively
+        $acl.SetAccessRuleProtection($true, $true)
+
+        # Deny the CURRENT USER (and Google Drive) from changing this value
+        # We Deny: SetValue, CreateSubKey, Delete, ChangePermissions, TakeOwnership
         $rule = New-Object System.Security.AccessControl.RegistryAccessRule(
-            "BUILTIN\Users",
-            "SetValue,CreateSubKey,Delete",
+            $currentUser,
+            "SetValue,CreateSubKey,Delete,ChangePermissions,TakeOwnership",
             "ContainerInherit,ObjectInherit",
             "None",
             "Deny"
         )
+        
         $acl.AddAccessRule($rule)
         Set-Acl -Path $keyPath -AclObject $acl
         
-        Write-Host "Locked $keyPath"
+        Write-Host "LOCKED: $keyPath" -ForegroundColor Green
+    } else {
+        Write-Host "SKIPPED: $keyPath (Key does not exist yet. Open a file with Egnyte first!)" -ForegroundColor Red
     }
 }
 
-Write-Host "`nRegistry keys locked. Google Drive shouldn't be able to overwrite them now."
+Write-Host "`nAssociations Locked." -ForegroundColor Yellow
+Write-Host "You can now restart Google Drive."
