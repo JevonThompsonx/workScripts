@@ -1,38 +1,43 @@
+# Cleanup Google Drive & Egnyte Associations
 # Run as Administrator
-Write-Host "Killing Google Drive processes..." -ForegroundColor Cyan
-Get-Process -Name "GoogleDriveFS" -ErrorAction SilentlyContinue | Stop-Process -Force
 
-# Define keys to clean
-$userExts = @(
+Write-Host "Starting Cleanup Process..." -ForegroundColor Cyan
+
+# 1. Kill Google Drive processes to unlock files/registry
+Write-Host "Stopping Google Drive processes..." -ForegroundColor Yellow
+Get-Process -Name "GoogleDriveFS" -ErrorAction SilentlyContinue | Stop-Process -Force
+Start-Sleep -Seconds 2
+
+# 2. Define Registry Paths
+$hkcuPaths = @(
     "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.gdoc",
     "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.gsheet",
     "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.gslides"
 )
 
-$classesRoot = @(
+$hkcrPaths = @(
     "HKCR:\.gdoc",
     "HKCR:\.gsheet",
     "HKCR:\.gslides"
 )
 
-# Clean User Keys (The most important part)
-foreach ($key in $userExts) {
-    if (Test-Path $key) {
-        Remove-Item -Path $key -Recurse -Force
-        Write-Host "Removed User Association: $key" -ForegroundColor Green
+# 3. Clean Current User (HKCU) - This removes any "UserChoice" overrides
+foreach ($path in $hkcuPaths) {
+    if (Test-Path $path) {
+        Remove-Item -Path $path -Recurse -Force -ErrorAction SilentlyContinue
+        Write-Host "Removed User Association: $path" -ForegroundColor Green
     }
 }
 
-# Clean System Keys
+# 4. Clean System Root (HKCR) - Ensures a clean slate for Egnyte Reinstall
 if (!(Test-Path "HKCR:")) { New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT | Out-Null }
-foreach ($key in $classesRoot) {
-    if (Test-Path $key) {
-        Remove-Item -Path $key -Recurse -Force
-        Write-Host "Removed System Association: $key" -ForegroundColor Green
+
+foreach ($path in $hkcrPaths) {
+    if (Test-Path $path) {
+        Remove-Item -Path $path -Recurse -Force -ErrorAction SilentlyContinue
+        Write-Host "Removed System Association: $path" -ForegroundColor Green
     }
 }
 
-Write-Host "`nCleanup Complete." -ForegroundColor Yellow
-Write-Host "1. Reinstall Egnyte (or use 'Open With' -> Egnyte -> Always)."
-Write-Host "2. Verify the file opens correctly."
-Write-Host "3. Run the LOCK script immediately."
+Write-Host "`nCleanup Complete." -ForegroundColor Cyan
+Write-Host "Please REBOOT before installing Egnyte." -ForegroundColor Yellow
