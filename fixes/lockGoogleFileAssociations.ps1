@@ -1,256 +1,317 @@
-# Lock Google File Associations to Prevent Hijacking v3
-# Run as Administrator
-# Purpose: Prevent Google Drive from hijacking file associations
+# Lock Google File Associations v5
+# Run as Administrator  
+# Purpose: Lock file associations to Egnyte, prevent Google Drive hijacking
+# Run AFTER installing Egnyte, BEFORE installing Google Drive
 
 #Requires -RunAsAdministrator
 
 param(
-    [switch]$Unlock  # Use -Unlock to reverse the lock
+    [switch]$Unlock  # Use -Unlock to reverse
 )
 
-# Start logging for enterprise troubleshooting
 $LogPath = "$env:TEMP\GoogleAssocLock_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
 Start-Transcript -Path $LogPath -ErrorAction SilentlyContinue | Out-Null
 
-$currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
 $extensions = @(".gdoc", ".gsheet", ".gslides")
-$hkcuBase = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts"
+$currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
 
-Write-Host "`n=== Google File Association Lock/Unlock v3 ===" -ForegroundColor Cyan
+Write-Host "`n=== Google File Association Lock v5 ===" -ForegroundColor Cyan
 Write-Host "Running as: $currentUser" -ForegroundColor DarkGray
-Write-Host "Log file: $LogPath" -ForegroundColor DarkGray
 Write-Host "Mode: $(if ($Unlock) { 'UNLOCK' } else { 'LOCK' })" -ForegroundColor $(if ($Unlock) { 'Yellow' } else { 'Green' })
+Write-Host "Log: $LogPath" -ForegroundColor DarkGray
 
-# Create HKCR drive if needed
-$hkcrCreated = $false
+# Create HKCR drive
 if (!(Test-Path "HKCR:")) { 
-    New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT -Scope Script | Out-Null
-    $hkcrCreated = $true
+    New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT -Scope Script | Out-Null 
+}
+
+# Helper: Apply Deny ACL
+function Set-DenyAcl {
+    param([string]$RegPath, [string]$User, [Microsoft.Win32.RegistryKey]$Hive = [Microsoft.Win32.Registry]::CurrentUser)
+    try {
+        $key = $Hive.OpenSubKey($RegPath,
+            [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree,
+            [System.Security.AccessControl.RegistryRights]::ChangePermissions -bor
+            [System.Security.AccessControl.RegistryRights]::ReadPermissions)
+        if ($key) {
+            $acl = $key.GetAccessControl()
+            $acl.SetAccessRuleProtection($true, $true)
+            $rule = New-Object System.Security.AccessControl.RegistryAccessRule(
+                $User,
+                [System.Security.AccessControl.RegistryRights]"CreateSubKey,SetValue,Delete,ChangePermissions,TakeOwnership",
+                [System.Security.AccessControl.InheritanceFlags]::ContainerInherit,
+                [System.Security.AccessControl.PropagationFlags]::None,
+                [System.Security.AccessControl.AccessControlType]::Deny)
+            $acl.AddAccessRule($rule)
+            $key.SetAccessControl($acl)
+            $key.Close()
+            return $true
+        }
+    } catch { Write-Host "      ACL Error: $($_.Exception.Message)" -ForegroundColor Red }
+    return $false
+}
+
+# Helper: Remove Deny ACL
+function Remove-DenyAcl {
+    param([string]$RegPath, [Microsoft.Win32.RegistryKey]$Hive = [Microsoft.Win32.Registry]::CurrentUser)
+    try {
+        $key = $Hive.OpenSubKey($RegPath,
+            [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree,
+            [System.Security.AccessControl.RegistryRights]::ChangePermissions)
+        if ($key) {
+            $acl = $key.GetAccessControl()
+            $denyRules = @($acl.Access | Where-Object { $_.AccessControlType -eq 'Deny' })
+            if ($denyRules.Count -gt 0) {
+                foreach ($rule in $denyRules) { $acl.RemoveAccessRule($rule) | Out-Null }
+                $acl.SetAccessRuleProtection($false, $false)
+                $key.SetAccessControl($acl)
+            }
+            $key.Close()
+            return $true
+        }
+    } catch { }
+    return $false
 }
 
 # === UNLOCK MODE ===
 if ($Unlock) {
-    Write-Host "`n[Unlocking] Removing Deny ACLs..." -ForegroundColor Yellow
-    
+    Write-Host "`n[1/3] Unlocking HKCU\SOFTWARE\Classes..." -ForegroundColor Yellow
     foreach ($ext in $extensions) {
-        $fullPath = "$hkcuBase\$ext"
-        
-        if (!(Test-Path $fullPath)) {
-            Write-Host "  $ext - Not found (nothing to unlock)" -ForegroundColor DarkGray
-            continue
-        }
-        
-        try {
-            # Use .NET for reliable ACL access
-            $regPath = "SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\$ext"
-            $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey(
-                $regPath,
-                [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree,
-                [System.Security.AccessControl.RegistryRights]::ChangePermissions
-            )
-            
-            if ($key) {
-                $acl = $key.GetAccessControl()
-                
-                # Find and remove Deny rules
-                $denyRules = @($acl.Access | Where-Object { 
-                    $_.AccessControlType -eq 'Deny'
-                })
-                
-                if ($denyRules.Count -gt 0) {
-                    foreach ($rule in $denyRules) {
-                        $acl.RemoveAccessRule($rule) | Out-Null
-                    }
-                    
-                    # Re-enable inheritance
-                    $acl.SetAccessRuleProtection($false, $false)
-                    $key.SetAccessControl($acl)
-                    Write-Host "  $ext - UNLOCKED" -ForegroundColor Green
-                } else {
-                    Write-Host "  $ext - No lock found" -ForegroundColor DarkGray
-                }
-                $key.Close()
-            } else {
-                Write-Host "  $ext - Could not open key" -ForegroundColor DarkYellow
-            }
-        } catch {
-            Write-Host "  $ext - Error: $($_.Exception.Message)" -ForegroundColor Red
+        Remove-DenyAcl -RegPath "SOFTWARE\Classes\$ext" | Out-Null
+        $path = "HKCU:\SOFTWARE\Classes\$ext"
+        if (Test-Path $path) {
+            Remove-Item -Path $path -Recurse -Force -ErrorAction SilentlyContinue
+            Write-Host "      Removed override: $ext" -ForegroundColor Green
+        } else {
+            Write-Host "      No override found: $ext" -ForegroundColor DarkGray
         }
     }
     
-    if ($hkcrCreated) { Remove-PSDrive -Name HKCR -ErrorAction SilentlyContinue }
+    Write-Host "`n[2/3] Unlocking HKCU FileExts..." -ForegroundColor Yellow
+    foreach ($ext in $extensions) {
+        $regPath = "SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\$ext"
+        if (Remove-DenyAcl -RegPath $regPath) {
+            Write-Host "      Unlocked: $ext" -ForegroundColor Green
+        } else {
+            Write-Host "      No lock or not found: $ext" -ForegroundColor DarkGray
+        }
+    }
+    
+    Write-Host "`n[3/3] Restarting Explorer..." -ForegroundColor Yellow
+    Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 1
+    Start-Process explorer
+    
     Write-Host "`n=== Unlock Complete ===" -ForegroundColor Cyan
-    Write-Host "Users can now change file associations via 'Open With'." -ForegroundColor White
+    Write-Host "Google Drive can now reclaim associations if reinstalled." -ForegroundColor White
     Stop-Transcript -ErrorAction SilentlyContinue | Out-Null
     exit 0
 }
 
 # === LOCK MODE ===
 
-# 1. Show current associations (informational only - we lock regardless)
-Write-Host "`n[1/3] Current file associations (informational)..." -ForegroundColor Yellow
+# 1. Detect current handlers (should be Egnyte after fresh install)
+Write-Host "`n[1/5] Detecting current file handlers..." -ForegroundColor Yellow
 
+$handlers = @{}
 foreach ($ext in $extensions) {
     $handler = $null
+    $source = $null
     
-    # Check HKCU UserChoice first
-    $userChoicePath = "$hkcuBase\$ext\UserChoice"
-    if (Test-Path $userChoicePath) {
-        $handler = (Get-ItemProperty -Path $userChoicePath -Name ProgId -ErrorAction SilentlyContinue).ProgId
-        if ($handler) {
-            Write-Host "      $ext -> $handler (UserChoice)" -ForegroundColor White
-            continue
-        }
+    # Check HKCR for current handler
+    $hkcrPath = "HKCR:\$ext\shell\open\command"
+    if (Test-Path $hkcrPath) {
+        $handler = (Get-ItemProperty -Path $hkcrPath -Name "(default)" -ErrorAction SilentlyContinue).'(default)'
+        $source = "HKCR"
     }
     
-    # Check HKCR default
-    if (Test-Path "HKCR:\$ext") {
-        $handler = (Get-ItemProperty -Path "HKCR:\$ext" -Name "(default)" -ErrorAction SilentlyContinue).'(default)'
-        if ($handler) {
-            Write-Host "      $ext -> $handler (System)" -ForegroundColor White
-            continue
-        }
-    }
-    
-    Write-Host "      $ext -> (no handler - will use system default)" -ForegroundColor DarkGray
-}
-
-Write-Host "`n      Note: Locking will preserve current behavior and block Google Drive" -ForegroundColor DarkCyan
-
-# 2. Clean up any existing UserChoice and prepare keys
-Write-Host "`n[2/3] Preparing registry keys..." -ForegroundColor Yellow
-
-foreach ($ext in $extensions) {
-    $fullPath = "$hkcuBase\$ext"
-
-    # Ensure the parent key exists
-    if (!(Test-Path $fullPath)) {
-        New-Item -Path $hkcuBase -Name $ext -Force | Out-Null
-        Write-Host "      Created: $fullPath" -ForegroundColor DarkGray
-    }
-
-    # Remove any existing UserChoice that might be from Google Drive
-    $userChoicePath = "$fullPath\UserChoice"
-    if (Test-Path $userChoicePath) {
-        try {
-            # Use .NET for proper ACL access on protected UserChoice key
-            $regPath = "SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\$ext\UserChoice"
-            $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey(
-                $regPath,
-                [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree,
-                [System.Security.AccessControl.RegistryRights]::TakeOwnership
-            )
-            
-            if ($key) {
-                $acl = $key.GetAccessControl()
-                $currentSid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User
-                $acl.SetOwner($currentSid)
-                $key.SetAccessControl($acl)
-                $key.Close()
-                
-                # Grant full control
-                $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey(
-                    $regPath,
-                    [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree,
-                    [System.Security.AccessControl.RegistryRights]::ChangePermissions
-                )
-                
-                if ($key) {
-                    $acl = $key.GetAccessControl()
-                    $rule = New-Object System.Security.AccessControl.RegistryAccessRule(
-                        $currentUser,
-                        [System.Security.AccessControl.RegistryRights]::FullControl,
-                        [System.Security.AccessControl.InheritanceFlags]::ContainerInherit,
-                        [System.Security.AccessControl.PropagationFlags]::None,
-                        [System.Security.AccessControl.AccessControlType]::Allow
-                    )
-                    $acl.SetAccessRule($rule)
-                    $key.SetAccessControl($acl)
-                    $key.Close()
-                }
-            }
-            
-            Remove-Item -Path $userChoicePath -Force -ErrorAction Stop
-            Write-Host "      Removed UserChoice for $ext" -ForegroundColor Yellow
-        } catch {
-            Write-Host "      Warning: Could not remove UserChoice for $ext - $($_.Exception.Message)" -ForegroundColor DarkYellow
-        }
+    if ($handler -and $handler -notlike "*Google*") {
+        $handlers[$ext] = $handler
+        Write-Host "      $ext -> $handler" -ForegroundColor Green
+    } elseif ($handler -like "*Google*") {
+        Write-Host "      $ext -> Google Drive (WARNING: Run cleanup first!)" -ForegroundColor Red
+        $handlers[$ext] = $null
     } else {
-        Write-Host "      No UserChoice for $ext (OK)" -ForegroundColor DarkGray
+        Write-Host "      $ext -> No handler found (Egnyte may not be installed)" -ForegroundColor Yellow
+        $handlers[$ext] = $null
     }
 }
 
-# 3. Apply the Lock (Deny Write Permissions)
-Write-Host "`n[3/3] Applying Deny ACLs to prevent Google Drive hijacking..." -ForegroundColor Yellow
+# Check if we have valid handlers
+$validHandlers = ($handlers.Values | Where-Object { $_ -ne $null }).Count
+if ($validHandlers -eq 0) {
+    Write-Host "`nERROR: No valid handlers found. Please ensure:" -ForegroundColor Red
+    Write-Host "  1. Egnyte is installed" -ForegroundColor Yellow
+    Write-Host "  2. You've opened a .gdoc file with Egnyte at least once" -ForegroundColor Yellow
+    Write-Host "  3. Google Drive is not currently registered" -ForegroundColor Yellow
+    Stop-Transcript -ErrorAction SilentlyContinue | Out-Null
+    exit 1
+}
 
-$successCount = 0
+# 2. Create HKCU\SOFTWARE\Classes overrides with Egnyte's handler
+Write-Host "`n[2/5] Creating HKCU\SOFTWARE\Classes overrides..." -ForegroundColor Yellow
+
 foreach ($ext in $extensions) {
-    $fullPath = "$hkcuBase\$ext"
-    $regPath = "SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\$ext"
+    $path = "HKCU:\SOFTWARE\Classes\$ext"
+    $handler = $handlers[$ext]
+    
+    if (-not $handler) {
+        Write-Host "      Skipping $ext (no handler)" -ForegroundColor DarkYellow
+        continue
+    }
     
     try {
-        # Use .NET for reliable ACL modification
-        $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey(
-            $regPath,
-            [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree,
-            [System.Security.AccessControl.RegistryRights]::ChangePermissions -bor 
-            [System.Security.AccessControl.RegistryRights]::ReadPermissions
-        )
-        
-        if ($key) {
-            $acl = $key.GetAccessControl()
-            
-            # Disable inheritance to ensure our Deny rule sticks
-            $acl.SetAccessRuleProtection($true, $true)
-
-            # Deny the CURRENT USER from creating subkeys (preventing UserChoice creation)
-            # These permissions block Google Drive's self-healing mechanism
-            $rule = New-Object System.Security.AccessControl.RegistryAccessRule(
-                $currentUser,
-                [System.Security.AccessControl.RegistryRights]"CreateSubKey,SetValue,Delete,ChangePermissions,TakeOwnership",
-                [System.Security.AccessControl.InheritanceFlags]::ContainerInherit,
-                [System.Security.AccessControl.PropagationFlags]::None,
-                [System.Security.AccessControl.AccessControlType]::Deny
-            )
-            
-            $acl.AddAccessRule($rule)
-            $key.SetAccessControl($acl)
-            $key.Close()
-            
-            Write-Host "      LOCKED: $ext" -ForegroundColor Green
-            $successCount++
-        } else {
-            Write-Host "      FAILED: $ext - Could not open key" -ForegroundColor Red
+        # Remove existing if present (unlock first)
+        Remove-DenyAcl -RegPath "SOFTWARE\Classes\$ext" | Out-Null
+        if (Test-Path $path) {
+            Remove-Item -Path $path -Recurse -Force -ErrorAction SilentlyContinue
         }
+        
+        # Create fresh structure
+        New-Item -Path $path -Force | Out-Null
+        Set-ItemProperty -Path $path -Name "(default)" -Value ""  # Empty to not follow ProgID chain
+        
+        # Create shell\open\command with Egnyte's handler
+        $cmdPath = "$path\shell\open\command"
+        New-Item -Path $cmdPath -Force | Out-Null
+        Set-ItemProperty -Path $cmdPath -Name "(default)" -Value $handler
+        
+        Write-Host "      Created override: $ext" -ForegroundColor Green
     } catch {
-        Write-Host "      FAILED: $ext - $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "      Failed to create $ext : $_" -ForegroundColor Red
+    }
+}
+
+# 3. Clean OpenWithProgids and OpenWithList (remove any Google entries)
+Write-Host "`n[3/5] Cleaning FileExts OpenWith entries..." -ForegroundColor Yellow
+
+foreach ($ext in $extensions) {
+    $basePath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\$ext"
+    $regPath = "SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\$ext"
+    
+    # Unlock if locked from previous run
+    Remove-DenyAcl -RegPath $regPath | Out-Null
+    
+    # Ensure base key exists
+    if (!(Test-Path $basePath)) {
+        New-Item -Path $basePath -Force | Out-Null
+    }
+    
+    # Remove UserChoice if exists
+    $userChoice = "$basePath\UserChoice"
+    if (Test-Path $userChoice) {
+        Remove-DenyAcl -RegPath "$regPath\UserChoice" | Out-Null
+        Remove-Item -Path $userChoice -Force -ErrorAction SilentlyContinue
+        Write-Host "      Removed UserChoice: $ext" -ForegroundColor Yellow
+    }
+    
+    # Clean OpenWithProgids
+    $progids = "$basePath\OpenWithProgids"
+    if (Test-Path $progids) {
+        $item = Get-Item $progids -ErrorAction SilentlyContinue
+        if ($item) {
+            $googleEntries = $item.GetValueNames() | Where-Object { $_ -like "*Google*" }
+            foreach ($entry in $googleEntries) {
+                Remove-ItemProperty -Path $progids -Name $entry -ErrorAction SilentlyContinue
+                Write-Host "      Removed from OpenWithProgids: $entry" -ForegroundColor Yellow
+            }
+        }
+    }
+    
+    # Clean OpenWithList
+    $list = "$basePath\OpenWithList"
+    if (Test-Path $list) {
+        $item = Get-Item $list -ErrorAction SilentlyContinue
+        if ($item) {
+            $toRemove = @()
+            foreach ($prop in ($item.GetValueNames() | Where-Object { $_ -ne "MRUList" })) {
+                $val = (Get-ItemProperty $list -ErrorAction SilentlyContinue).$prop
+                if ($val -like "*Google*") {
+                    $toRemove += $prop
+                    Remove-ItemProperty -Path $list -Name $prop -ErrorAction SilentlyContinue
+                    Write-Host "      Removed from OpenWithList: $prop ($val)" -ForegroundColor Yellow
+                }
+            }
+            # Fix MRUList
+            if ($toRemove.Count -gt 0) {
+                $mru = (Get-ItemProperty $list -Name MRUList -ErrorAction SilentlyContinue).MRUList
+                if ($mru) {
+                    $newMru = -join ($mru.ToCharArray() | Where-Object { $toRemove -notcontains $_ })
+                    if ($newMru) {
+                        Set-ItemProperty -Path $list -Name MRUList -Value $newMru -ErrorAction SilentlyContinue
+                    }
+                }
+            }
+        }
+    }
+}
+
+# 4. Lock HKCU\SOFTWARE\Classes overrides
+Write-Host "`n[4/5] Locking HKCU\SOFTWARE\Classes..." -ForegroundColor Yellow
+$classesLocked = 0
+
+foreach ($ext in $extensions) {
+    if ($handlers[$ext]) {  # Only lock if we created an override
+        if (Set-DenyAcl -RegPath "SOFTWARE\Classes\$ext" -User $currentUser) {
+            Write-Host "      LOCKED: HKCU\SOFTWARE\Classes\$ext" -ForegroundColor Green
+            $classesLocked++
+        } else {
+            Write-Host "      FAILED: HKCU\SOFTWARE\Classes\$ext" -ForegroundColor Red
+        }
+    }
+}
+
+# 5. Lock HKCU FileExts
+Write-Host "`n[5/5] Locking HKCU FileExts..." -ForegroundColor Yellow
+$fileExtsLocked = 0
+
+foreach ($ext in $extensions) {
+    $regPath = "SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\$ext"
+    if (Set-DenyAcl -RegPath $regPath -User $currentUser) {
+        Write-Host "      LOCKED: FileExts\$ext" -ForegroundColor Green
+        $fileExtsLocked++
+    } else {
+        Write-Host "      FAILED: FileExts\$ext" -ForegroundColor Red
     }
 }
 
 # Cleanup
-if ($hkcrCreated) { Remove-PSDrive -Name HKCR -ErrorAction SilentlyContinue }
+Remove-PSDrive -Name HKCR -ErrorAction SilentlyContinue
 
 # Summary
+$totalLocked = $classesLocked + $fileExtsLocked
 Write-Host "`n=== Lock Complete ===" -ForegroundColor Cyan
-if ($successCount -eq $extensions.Count) {
+
+if ($totalLocked -ge 4) {  # At least some locks applied
     Write-Host @"
 
-SUCCESS: All $successCount extensions locked.
-Google Drive will now be unable to hijack these file types.
+SUCCESS: $totalLocked locks applied
 
-To verify:
-  1. Install/reinstall Google Drive
-  2. Open a .gdoc file - it should use current handler (not Google Drive)
+What was done:
+  1. Created HKCU\SOFTWARE\Classes overrides with Egnyte's handler
+  2. Cleaned Google entries from OpenWithProgids/OpenWithList  
+  3. Locked HKCU\SOFTWARE\Classes (blocks Google from overriding)
+  4. Locked HKCU FileExts (blocks UserChoice hijacking)
 
-To reverse this lock later, run:
-  powershell -ExecutionPolicy Bypass -Command "IEX (irm 'URL') -Unlock"
+You can now install Google Drive - it will NOT be able to hijack
+these file associations.
 
-Log saved to: $LogPath
+To verify after installing Google Drive:
+  - Right-click a .gdoc file > Properties
+  - Should show Egnyte (or your system default), NOT Google Drive
+
+To unlock later: Run this script with -Unlock parameter
+
+Log: $LogPath
 "@ -ForegroundColor White
 } else {
-    Write-Host "`nWARNING: Only $successCount of $($extensions.Count) extensions locked." -ForegroundColor Yellow
-    Write-Host "Review errors above and retry if needed." -ForegroundColor Yellow
-    Write-Host "Log saved to: $LogPath" -ForegroundColor DarkGray
+    Write-Host "`nWARNING: Only $totalLocked locks applied. Review errors above." -ForegroundColor Yellow
 }
+
+# Restart Explorer to apply changes
+Write-Host "`nRestarting Explorer to apply changes..." -ForegroundColor Cyan
+Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue
+Start-Sleep -Seconds 1
+Start-Process explorer
 
 Stop-Transcript -ErrorAction SilentlyContinue | Out-Null
