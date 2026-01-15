@@ -1,4 +1,4 @@
-# Cleanup Google Drive & Egnyte File Associations v5
+# Cleanup Google Drive & Egnyte File Associations v6
 # Run as Administrator
 # Purpose: Complete cleanup before fresh Egnyte install
 
@@ -7,7 +7,7 @@
 $LogPath = "$env:TEMP\GoogleEgnyteCleanup_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
 Start-Transcript -Path $LogPath -ErrorAction SilentlyContinue | Out-Null
 
-Write-Host "`n=== Google/Egnyte File Association Cleanup v5 ===" -ForegroundColor Cyan
+Write-Host "`n=== Google/Egnyte File Association Cleanup v6 ===" -ForegroundColor Cyan
 Write-Host "Running as: $([System.Security.Principal.WindowsIdentity]::GetCurrent().Name)" -ForegroundColor DarkGray
 Write-Host "Log: $LogPath" -ForegroundColor DarkGray
 
@@ -38,7 +38,7 @@ function Remove-DenyAcl {
 }
 
 # 1. Kill processes
-Write-Host "`n[1/6] Stopping processes..." -ForegroundColor Yellow
+Write-Host "`n[1/8] Stopping processes..." -ForegroundColor Yellow
 @("GoogleDriveFS", "EgnyteDrive", "EgnyteClient") | ForEach-Object {
     $procs = @(Get-Process -Name $_ -ErrorAction SilentlyContinue)
     if ($procs.Count -gt 0) {
@@ -49,7 +49,7 @@ Write-Host "`n[1/6] Stopping processes..." -ForegroundColor Yellow
 }
 
 # 2. Remove our HKCU\SOFTWARE\Classes overrides (unlock first if locked)
-Write-Host "`n[2/6] Removing HKCU\SOFTWARE\Classes overrides..." -ForegroundColor Yellow
+Write-Host "`n[2/8] Removing HKCU\SOFTWARE\Classes overrides..." -ForegroundColor Yellow
 foreach ($ext in $extensions) {
     $path = "HKCU:\SOFTWARE\Classes\$ext"
     Remove-DenyAcl -RegPath "SOFTWARE\Classes\$ext" | Out-Null
@@ -61,8 +61,8 @@ foreach ($ext in $extensions) {
     }
 }
 
-# 3. Clean HKCU FileExts (unlock, then clean)
-Write-Host "`n[3/6] Cleaning HKCU FileExts..." -ForegroundColor Yellow
+# 3. Clean HKCU FileExts completely (unlock, then remove everything)
+Write-Host "`n[3/8] Cleaning HKCU FileExts (full reset)..." -ForegroundColor Yellow
 foreach ($ext in $extensions) {
     $basePath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\$ext"
     $regPath = "SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\$ext"
@@ -71,53 +71,78 @@ foreach ($ext in $extensions) {
     Remove-DenyAcl -RegPath $regPath | Out-Null
     
     if (Test-Path $basePath) {
-        # Remove UserChoice
+        # Remove UserChoice (standard)
         $userChoice = "$basePath\UserChoice"
         if (Test-Path $userChoice) {
             Remove-DenyAcl -RegPath "$regPath\UserChoice" | Out-Null
-            Remove-Item -Path $userChoice -Force -ErrorAction SilentlyContinue
+            Remove-Item -Path $userChoice -Force -Recurse -ErrorAction SilentlyContinue
             Write-Host "      Removed UserChoice for $ext" -ForegroundColor Green
         }
         
-        # Clean OpenWithProgids - remove Google entries
+        # Remove UserChoiceLatest (Windows 10/11 feature)
+        $userChoiceLatest = "$basePath\UserChoiceLatest"
+        if (Test-Path $userChoiceLatest) {
+            Remove-DenyAcl -RegPath "$regPath\UserChoiceLatest" | Out-Null
+            Remove-Item -Path $userChoiceLatest -Force -Recurse -ErrorAction SilentlyContinue
+            Write-Host "      Removed UserChoiceLatest for $ext" -ForegroundColor Green
+        }
+        
+        # Clear OpenWithProgids completely
         $progids = "$basePath\OpenWithProgids"
         if (Test-Path $progids) {
-            $item = Get-Item $progids
-            $item.GetValueNames() | Where-Object { $_ -like "*Google*" } | ForEach-Object {
-                Remove-ItemProperty -Path $progids -Name $_ -ErrorAction SilentlyContinue
-                Write-Host "      Removed OpenWithProgids: $_" -ForegroundColor Green
+            $item = Get-Item $progids -ErrorAction SilentlyContinue
+            if ($item) {
+                $values = $item.GetValueNames()
+                foreach ($val in $values) {
+                    Remove-ItemProperty -Path $progids -Name $val -ErrorAction SilentlyContinue
+                }
+                Write-Host "      Cleared OpenWithProgids for $ext ($($values.Count) entries)" -ForegroundColor Green
             }
         }
         
-        # Clean OpenWithList - remove Google entries
+        # Clear OpenWithList completely
         $list = "$basePath\OpenWithList"
         if (Test-Path $list) {
-            $item = Get-Item $list
-            $toRemove = @()
-            $item.GetValueNames() | Where-Object { $_ -ne "MRUList" } | ForEach-Object {
-                $val = (Get-ItemProperty $list).$_
-                if ($val -like "*Google*") {
-                    $toRemove += $_
-                    Remove-ItemProperty -Path $list -Name $_ -ErrorAction SilentlyContinue
-                    Write-Host "      Removed OpenWithList: $_ ($val)" -ForegroundColor Green
-                }
-            }
-            # Update MRUList to remove references to deleted entries
-            if ($toRemove.Count -gt 0) {
-                $mru = (Get-ItemProperty $list -Name MRUList -ErrorAction SilentlyContinue).MRUList
-                if ($mru) {
-                    $newMru = ($mru.ToCharArray() | Where-Object { $_ -notin $toRemove }) -join ''
-                    if ($newMru) {
-                        Set-ItemProperty -Path $list -Name MRUList -Value $newMru
-                    }
-                }
-            }
+            Remove-Item -Path $list -Force -Recurse -ErrorAction SilentlyContinue
+            Write-Host "      Removed OpenWithList for $ext" -ForegroundColor Green
         }
     }
 }
 
-# 4. Clean HKCR extensions (requires admin)
-Write-Host "`n[4/6] Cleaning HKCR extensions..." -ForegroundColor Yellow
+# 4. Clean ApplicationAssociationToasts (the "don't ask again" cache)
+Write-Host "`n[4/8] Cleaning ApplicationAssociationToasts..." -ForegroundColor Yellow
+$toastsPath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts"
+if (Test-Path $toastsPath) {
+    $toasts = Get-Item $toastsPath
+    $toRemove = @()
+    foreach ($ext in $extensions) {
+        $extPattern = $ext.TrimStart('.')  # gdoc, gsheet, gslides
+        $toasts.GetValueNames() | Where-Object { $_ -like "*$extPattern*" } | ForEach-Object {
+            $toRemove += $_
+        }
+    }
+    foreach ($val in $toRemove) {
+        Remove-ItemProperty -Path $toastsPath -Name $val -ErrorAction SilentlyContinue
+        Write-Host "      Removed toast: $val" -ForegroundColor Green
+    }
+    if ($toRemove.Count -eq 0) {
+        Write-Host "      No cached toasts found (OK)" -ForegroundColor DarkGray
+    }
+}
+
+# 5. Clean ApplicationAssociations (another cache location)
+Write-Host "`n[5/8] Cleaning ApplicationAssociations cache..." -ForegroundColor Yellow
+$appAssocPath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts"
+foreach ($ext in $extensions) {
+    $assocPath = "$appAssocPath\$ext\Application"
+    if (Test-Path $assocPath) {
+        Remove-Item -Path $assocPath -Force -Recurse -ErrorAction SilentlyContinue
+        Write-Host "      Removed Application cache for $ext" -ForegroundColor Green
+    }
+}
+
+# 6. Clean HKCR extensions (requires admin)
+Write-Host "`n[6/8] Cleaning HKCR extensions..." -ForegroundColor Yellow
 if (!(Test-Path "HKCR:")) { 
     New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT -Scope Script | Out-Null 
 }
@@ -136,8 +161,18 @@ foreach ($ext in $extensions) {
     }
 }
 
-# 5. Clean HKCR Google ProgIDs
-Write-Host "`n[5/6] Cleaning HKCR Google ProgIDs..." -ForegroundColor Yellow
+# Also clean gdoc_auto_file and similar auto-generated ProgIDs
+$autoProgIds = @("gdoc_auto_file", "gsheet_auto_file", "gslides_auto_file")
+foreach ($progId in $autoProgIds) {
+    $path = "HKCR:\$progId"
+    if (Test-Path $path) {
+        Remove-Item -Path $path -Recurse -Force -ErrorAction SilentlyContinue
+        Write-Host "      Removed auto ProgID: $progId" -ForegroundColor Green
+    }
+}
+
+# 7. Clean HKCR Google ProgIDs
+Write-Host "`n[7/8] Cleaning HKCR Google ProgIDs..." -ForegroundColor Yellow
 foreach ($progId in $googleProgIds) {
     $path = "HKCR:\$progId"
     if (Test-Path $path) {
@@ -152,12 +187,26 @@ foreach ($progId in $googleProgIds) {
     }
 }
 
-# 6. Verify
-Write-Host "`n[6/6] Verification..." -ForegroundColor Yellow
+# Also clean Egnyte ProgIDs from HKCR (for fresh install)
+$egnyteProgIds = @("EgnyteDrive.gdoc", "EgnyteDrive.gsheet", "EgnyteDrive.gslides", "Applications\EgnyteDrive.exe")
+foreach ($progId in $egnyteProgIds) {
+    $path = "HKCR:\$progId"
+    if (Test-Path $path) {
+        Remove-Item -Path $path -Recurse -Force -ErrorAction SilentlyContinue
+        Write-Host "      Removed Egnyte ProgID: $progId" -ForegroundColor Green
+    }
+}
+
+# 8. Verify
+Write-Host "`n[8/8] Verification..." -ForegroundColor Yellow
 $remaining = @()
 foreach ($ext in $extensions) {
     if (Test-Path "HKCR:\$ext") { $remaining += "HKCR:$ext" }
     if (Test-Path "HKCU:\SOFTWARE\Classes\$ext") { $remaining += "HKCU Classes:$ext" }
+    
+    $fileExtPath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\$ext"
+    if (Test-Path "$fileExtPath\UserChoice") { $remaining += "UserChoice:$ext" }
+    if (Test-Path "$fileExtPath\UserChoiceLatest") { $remaining += "UserChoiceLatest:$ext" }
 }
 foreach ($progId in $googleProgIds) {
     if (Test-Path "HKCR:\$progId") { $remaining += "HKCR:$progId" }
@@ -176,7 +225,7 @@ Write-Host "`n=== Cleanup Complete ===" -ForegroundColor Cyan
 Write-Host @"
 
 Next Steps:
-  1. REBOOT the computer (required!)
+  1. REBOOT the computer (required to clear shell cache!)
   2. Install Egnyte Desktop App
   3. Log into Egnyte and open a .gdoc file once to register handler
   4. Run the Lock script BEFORE installing Google Drive
