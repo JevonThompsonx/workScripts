@@ -14,7 +14,7 @@ if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 }
 
 # --- Configuration ---
-$downloadUrl = "https://egnyte-cdn.egnyte.com/egnytedrive/win/en-us/3.25.1/EgnyteDesktopApp_3.25.1_161.msi"
+$downloadUrl = "https://egnyte-cdn.egnyte.com/egnytedrive/win/en-us/latest/EgnyteConnectWin.msi"
 $localDirectory = "C:\Archive"
 $fileName = "EgnyteSetup.msi"
 $localPath = Join-Path -Path $localDirectory -ChildPath $fileName # Safely combines path and filename
@@ -71,6 +71,14 @@ if (-not (Test-Path -Path $localDirectory)) {
     New-Item -ItemType Directory -Path $localDirectory | Out-Null
 }
 
+# Ensure TLS 1.2+ is enabled for downloads
+try {
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
+}
+catch {
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+}
+
 # Download the Egnyte MSI file
 Write-Host "Downloading the Egnyte installer to $localPath..."
 try {
@@ -92,7 +100,16 @@ $msiArgs = @(
 )
 
 try {
-    Start-Process msiexec -ArgumentList $msiArgs -Wait -NoNewWindow
+    $process = Start-Process msiexec -ArgumentList $msiArgs -Wait -NoNewWindow -PassThru
+    $exitCode = $process.ExitCode
+    if ($exitCode -ne 0 -and $exitCode -ne 3010) {
+        Write-Host "Egnyte update failed with exit code $exitCode."
+        exit 1
+    }
+    if ($exitCode -eq 3010) {
+        Write-Host "Egnyte update completed successfully. Reboot required."
+        exit 3010
+    }
     Write-Host "Egnyte update installation complete."
 }
 catch {

@@ -1,12 +1,20 @@
 #Requires -RunAsAdministrator
 
+param(
+    [switch]$RunDebloat,
+    [switch]$SkipDebloatPrompt,
+    [switch]$NoPause
+)
+
 # Set the directory containing the installation files
 $INSTALL_DIR = "C:\Archive" # Base directory for installation files
 
 # Verify Administrator privileges
 if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
     Write-Error "This script requires Administrator privileges. Please run as Administrator."
-    Pause
+    if (-not $NoPause) {
+        Pause
+    }
     Exit 1
 }
 
@@ -22,7 +30,9 @@ $timestamp = Get-Date -Format "yyyyMMdd_HHmmss" # e.g., 20250509_083600
 # Check if the main installation directory exists
 if (-Not (Test-Path -Path $INSTALL_DIR -PathType Container)) {
     Write-Error "Critical Error: Installation directory '$INSTALL_DIR' not found or is not a directory. Script will exit."
-    Pause
+    if (-not $NoPause) {
+        Pause
+    }
     Exit 1
 }
 
@@ -34,7 +44,9 @@ if (-Not (Test-Path -Path $LOG_FOLDER_PATH -PathType Container)) {
     }
     catch {
         Write-Error "Critical Error: Could not create log folder at '$LOG_FOLDER_PATH'. Please check permissions. Error: $($_.Exception.Message). Script will exit."
-        Pause
+        if (-not $NoPause) {
+            Pause
+        }
         Exit 1
     }
 }
@@ -134,9 +146,16 @@ Write-Output "NOTICE: This step will download and execute an external script fro
 Write-Output "This is an OPTIONAL step. External scripts can pose security risks." -ForegroundColor Yellow
 Write-Output ""
 
-$runDebloat = Read-Host "Do you want to run the external debloat script? (y/N)"
+$shouldRunDebloat = $RunDebloat
 
-if ($runDebloat -eq "y" -or $runDebloat -eq "Y") {
+if (-not $SkipDebloatPrompt -and -not $RunDebloat) {
+    $runDebloat = Read-Host "Do you want to run the external debloat script? (y/N)"
+    if ($runDebloat -eq "y" -or $runDebloat -eq "Y") {
+        $shouldRunDebloat = $true
+    }
+}
+
+if ($shouldRunDebloat) {
     $debloatLogFileName = "debloat_script_$($timestamp).log"
     $fullDebloatLogPath = Join-Path -Path $LOG_FOLDER_PATH -ChildPath $debloatLogFileName
 
@@ -176,4 +195,6 @@ Write-Output "" # Blank line for readability
 
 Write-Output ""
 Write-Output "Installation process completed. Review output for any warnings or errors."
-Pause
+if (-not $NoPause) {
+    Pause
+}

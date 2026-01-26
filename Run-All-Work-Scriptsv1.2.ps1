@@ -228,7 +228,7 @@ $installScriptUrl = "https://github.com/JevonThompsonx/workScripts/raw/refs/head
 function Run-Archive-Install {
     try {
         Write-Host "  -> Running software installation script..." -ForegroundColor Green
-        & ([scriptblock]::Create((irm $installScriptUrl)))
+        & ([scriptblock]::Create((irm $installScriptUrl))) -SkipDebloatPrompt -NoPause
         Write-Host "✔️ STEP 4 Complete: Software installation script executed." -ForegroundColor Green
     }
     catch {
@@ -275,7 +275,7 @@ else {
 Write-Host "STEP 5: Windows Debloat Options..." -ForegroundColor Cyan
 
 Write-Host "You can choose to run one of the following debloat scripts:" -ForegroundColor Yellow
-Write-Host "  1. Basic Debloat (general cleanup)" -ForegroundColor Gray
+Write-Host "  1. Raphire Debloat (https://debloat.raphi.re/)" -ForegroundColor Gray
 Write-Host "  2. Engineering Debloat (for engineering workflows)" -ForegroundColor Gray
 Write-Host "  3. Skip (do not run any debloat)" -ForegroundColor Gray
 
@@ -284,13 +284,13 @@ while ($true) {
     
     switch ($debloatChoice) {
         '1' {
-            Write-Host "  -> Running Basic Debloat..." -ForegroundColor Green
+            Write-Host "  -> Running Raphire Debloat..." -ForegroundColor Green
             try {
-                & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/win11Debloat.ps1")))
-                Write-Host "✔️ Basic Debloat completed successfully." -ForegroundColor Green
+                & ([scriptblock]::Create((irm "https://debloat.raphi.re/")))
+                Write-Host "✔️ Raphire Debloat completed successfully." -ForegroundColor Green
             }
             catch {
-                Write-Error "❌ An error occurred while running Basic Debloat."
+                Write-Error "❌ An error occurred while running Raphire Debloat."
             }
             break
         }
