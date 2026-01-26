@@ -40,6 +40,9 @@ https://egnyte-cdn.egnyte.com/egnytedrive/win/en-us/latest/EgnyteConnectWin.msi
 | `NinjaOne-Egnyte-Install.ps1` | Install/Update Egnyte | Stage 2 - After nuke or for updates |
 | `Egnyte-Nuke.ps1` | Legacy manual removal script | Manual/ad-hoc use |
 | `Egnyte-Update.ps1` | Legacy manual install script | Manual/ad-hoc use |
+| `Egnyte-NukeNoRestart.ps1` | Legacy removal without forcing reboot | Manual/ad-hoc use when you want to control reboot timing |
+| `DryRun-Egnyte-Nuke.ps1` | Dry-run of removal steps | Validation/troubleshooting (no destructive actions) |
+| `Test-EgnyteDetection.ps1` | Detects whether Egnyte is installed | Troubleshooting and automation condition checks |
 
 ---
 

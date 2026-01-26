@@ -1,61 +1,54 @@
-# Egnyte & Google Drive Co-Existence Strategy
+# fixes
 
-Cleanup Scripts: 
+Egnyte + Google Drive coexistence fix for Google file formats (`.gdoc`, `.gsheet`, `.gslides`).
 
+## Scripts in this folder
+
+- `cleanupGoogleFileAssociations.ps1` (cleanup/reset) removes conflicting registry keys and any prior ACL locks.
+- `lockGoogleFileAssociations.ps1` (lock) applies a deny ACL so Google Drive cannot hijack associations again (supports `-Unlock`).
+
+## One-liners (online)
+
+Cleanup/reset:
+
+```powershell
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/fixes/cleanupGoogleFileAssociations.ps1')"
+```
 
-Lock Script: 
+Lock:
 
+```powershell
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/fixes/lockGoogleFileAssociations.ps1')"
+```
 
-**Objective:** Force Windows to use the **Egnyte Desktop App** for Google file formats (`.gdoc`, `.gsheet`, `.gslides`) while allowing **Google Drive for Desktop** to remain installed for other uses.
+## Objective
 
-## The Problem
+Force Windows to use the Egnyte Desktop App for Google file formats while allowing Google Drive for Desktop to remain installed for other uses.
 
-Both Egnyte and Google Drive utilize aggressive "self-healing" mechanisms to claim file associations for Google formats.
+## The problem
 
-* **Google Drive** attempts to overwrite the User Registry (`HKCU`) association on every startup.
-* **Egnyte** attempts to set the System Registry (`HKCR`) association during installation.
-* **Result:** When both are installed, they conflict. This corrupts the `UserChoice` registry key, causing files to fail to open entirely or defaulting to the wrong application.
+Both Egnyte and Google Drive attempt to claim file associations for Google formats.
 
-## The Solution Methodology
+- Google Drive tries to overwrite user associations (HKCU) on startup.
+- Egnyte sets system associations (HKCR) during installation.
 
-To resolve this for a fleet of 300+ computers, we utilize a **"Clean, Assert, and Lock"** strategy. We do not rely on user interaction (e.g., "Open With..."). Instead, we manipulate Windows Access Control Lists (ACLs) to physically prevent Google Drive from writing to the association keys.
+When both are installed, `UserChoice` keys can become corrupted and files may stop opening or open in the wrong app.
 
-### 1. The Cleanup Script (`cleanupGoogleFileAssociations.ps1`)
+## The solution methodology
 
-**Intent:** To establish a "Scorched Earth" clean slate before re-deployment.
+Use a "clean, assert, and lock" strategy:
 
-* **Process Management:** Forcefully terminates `GoogleDriveFS` processes to release file locks.
-* **User Registry (`HKCU`):** Deletes current user overrides for Google extensions.
-* **System Registry (`HKCR`):** Deletes system-wide association traces to ensure the Egnyte installer sees a fresh environment.
-* **Outcome:** Windows effectively "forgets" how to open these files, clearing any corruption.
+1. Run `cleanupGoogleFileAssociations.ps1` to wipe the association state.
+2. Reboot.
+3. Install Egnyte (Egnyte becomes the system default handler).
+4. Run `lockGoogleFileAssociations.ps1` to deny writes to the per-user association keys.
+5. Reinstall Google Drive (it can run, but cannot take over `.gdoc`/`.gsheet`/`.gslides`).
 
-### 2. The Association Logic (Reinstall)
+## Deployment workflow
 
-**Intent:** To establish Egnyte as the default System Handler.
-
-* By installing Egnyte *after* the cleanup but *before* the lock, Egnyte registers its `ProgID` in `HKEY_CLASSES_ROOT`.
-* Since the User Registry is empty (thanks to the cleanup), Windows falls back to this System setting automatically.
-
-### 3. The Lock Script (`lockGoogleFileAssociations.ps1`)
-
-**Intent:** To prevent Google Drive from re-hijacking the association in the future.
-
-* **Target:** `HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.gdoc` (and related extensions).
-* **Mechanism:** The script applies a **"Deny"** permission on the *Current User* for `CreateSubKey` and `SetValue`.
-* **Why this works:** Google Drive runs as the *Current User*. When it attempts to create a `UserChoice` key to hijack the association, the operating system rejects the write request due to the ACL Deny rule.
-* **Outcome:** The User Registry remains empty for these extensions, forcing Windows to permanently use the Egnyte System Default.
-
----
-
-## Deployment Workflow 
-
-To ensure stability, the deployment must follow this strict order of operations:
-
-1. **Uninstall** Google Drive and Egnyte (Remove the conflicting agents).
-2. **Run Cleanup Script** (Clear the registry logic).
-3. **Reboot** (Unload registry hives to ensure clean application).
-4. **Install Egnyte** (Establishes Egnyte as the "System Owner").
-5. **Run Lock Script** (Prevents any future changes to this ownership).
-6. **Reinstall Google Drive** (Google Drive installs but is powerless to change the file associations).
+1. Uninstall Google Drive and Egnyte.
+2. Run the cleanup script.
+3. Reboot.
+4. Install Egnyte.
+5. Run the lock script.
+6. Reinstall Google Drive.

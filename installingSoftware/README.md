@@ -1,40 +1,32 @@
-## Installing Files from C:\Archive
-----------------------------------
-This script is designed to install all files located in the "C:\Archive" folder.
-It requires this folder to exist; otherwise, it won’t function correctly.
+# installingSoftware
 
-## Versions & Functionality
-------------------------------
+Bulk installers that run everything found in `C:\Archive`.
 
-### installAllArchiveSoftware.bat (Stable):
- This version is reliable and always works by running each `.exe` and `.msi` file in the "C:\Archive" folder one at a time.
+## Recommended script
 
-### Versions labeled “v2” (Testing):
-These versions are still under testing. For some applications, I needed to adjust installation options, so they're split into silent installs and interactive installs. Both types of install search for files within the C:\Archive folder.
+- `installAllArchiveSoftwarev2.6.ps1` (recommended) installs `.msi` files silently with per-MSI logs and launches `.exe` installers interactively. It also offers an optional external debloat step.
 
-### V2.5:
-This version does quiet installs of .msi files with log files for each app in the archive folder while .exes does a normal install with the GUI
+Online one-liner:
 
-### 2.6: 
+```powershell
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/installingSoftware/installAllArchiveSoftwarev2.6.ps1')"
+```
 
-Will write later
+## Other scripts in this folder
 
-------------------------------
-Powershells scripts are disabled by default. To enable for the current terminal session only: 
+- `installAllArchiveSoftwarev2.5.ps1` similar to v2.6 (no optional external debloat step).
+- `installAllArchiveSoftwarev2SilentInstall.bat` runs EXEs with UI and MSIs via `msiexec /qn` (logs to `%TEMP%`).
+- `install_AllArchive_Softwarev2_InteractiveInstall.bat` runs EXEs with UI and MSIs with UI.
+- `installAllArchiveSoftwareNoWait2.bat` launches all installers without waiting (easy to overwhelm endpoints).
+- `installAllArchiveSoftware.bat` legacy; MSI handling is not reliable (prefer the PowerShell versions).
+- `ninjaOneInstall.ps1` helper to download + install NinjaOne agent (requires setting `$installerUrl` in the script).
 
-`powershell -ExecutionPolicy Bypass`
+## Prerequisites
 
-## Offline install Steps
-1. Open cmd 
-2. Navigate to the directory with the script
-3. Enable powershell commands for this session only: powershell -ExecutionPolicy Bypass 
-4. Run the script: ./installAllArchiveSoftwarev2.5.ps1
+- `C:\Archive` exists and contains the installers you want to run (`.msi` and/or `.exe`).
+- Run PowerShell scripts in an elevated PowerShell.
 
-## Online install Steps
-1. Open powershell as an admin
-2. Enable powershell commands for this session only: powershell -ExecutionPolicy Bypass 
-3. & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/InstallScripts/refs/heads/main/installingSoftware/installAllArchiveSoftwarev2.5.ps1")))
+## Logging
 
-## Adding Web apps
-1. 3CX Web app: https://ashleyvancecloud.3cx.us:5001/#/people
-2. Select pwa creator in top right - at the right of the search bar
+- `installAllArchiveSoftwarev2.5.ps1` and `installAllArchiveSoftwarev2.6.ps1` create logs under `C:\Archive\InstallLogs`.
+- Some BAT variants log to `%TEMP%`.
