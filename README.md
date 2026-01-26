@@ -24,6 +24,20 @@ Non-interactive with Raphire debloat:
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Run-All-Work-Scriptsv1.2.ps1')" -NonInteractive -RunRaphireDebloat
 ```
 
+## RMM one-liner (no C:\Archive installs)
+
+Use the dedicated RMM runner with a forced Administrator password and no C:\Archive installs (skipped by design):
+
+```powershell
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Run-All-Work-Scriptsv1.2-RMM.ps1')" -AdministratorPassword "<YOUR_PASSWORD>"
+```
+
+If your RMM UI blocks special characters, use Base64:
+
+```powershell
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Run-All-Work-Scriptsv1.2-RMM.ps1')" -AdministratorPasswordBase64 "<BASE64_UTF8_PASSWORD>"
+```
+
 ## Common one-liners
 
 Windows setup (current settings script):
