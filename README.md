@@ -12,12 +12,30 @@ Run the master orchestrator (recommended):
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Run-All-Work-Scriptsv1.2.ps1')"
 ```
 
+Non-interactive (RMM-friendly):
+
+```powershell
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Run-All-Work-Scriptsv1.2.ps1')" -NonInteractive -SkipDebloat -SkipRmmInstall
+```
+
+Non-interactive with Raphire debloat:
+
+```powershell
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Run-All-Work-Scriptsv1.2.ps1')" -NonInteractive -RunRaphireDebloat
+```
+
 ## Common one-liners
 
 Windows setup (current settings script):
 
 ```powershell
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/windows%20setup/setup_script_windows_settings1_3.ps1')"
+```
+
+Non-interactive:
+
+```powershell
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/windows%20setup/setup_script_windows_settings1_3.ps1')" -NoPause
 ```
 
 Enable built-in local Administrator account:
@@ -42,6 +60,12 @@ Install everything in `C:\Archive` (MSI silent + logging, EXE interactive):
 
 ```powershell
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/installingSoftware/installAllArchiveSoftwarev2.6.ps1')"
+```
+
+Non-interactive:
+
+```powershell
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/installingSoftware/installAllArchiveSoftwarev2.6.ps1')" -NonInteractive
 ```
 
 ## Folder guide

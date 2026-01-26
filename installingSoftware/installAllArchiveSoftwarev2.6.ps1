@@ -3,8 +3,16 @@
 param(
     [switch]$RunDebloat,
     [switch]$SkipDebloatPrompt,
-    [switch]$NoPause
+    [switch]$NoPause,
+    [switch]$NonInteractive
 )
+
+if ($NonInteractive) {
+    $NoPause = $true
+    if (-not $RunDebloat) {
+        $SkipDebloatPrompt = $true
+    }
+}
 
 # Set the directory containing the installation files
 $INSTALL_DIR = "C:\Archive" # Base directory for installation files

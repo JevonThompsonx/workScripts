@@ -1,9 +1,17 @@
 # BOLO - I have been modified for a new deployment method.
 
+param(
+    [switch]$NonInteractive,
+    [string]$TargetDirectory = "C:\Archive\rmm",
+    [string]$MsiPattern = "*-AV_*.msi",
+    [int]$Selection = 1,
+    [switch]$NoPause
+)
+
 # Main function to encapsulate the script's logic.
 function Start-AgentDeployment {
     # Define the target directory and installer log path.
-    $targetDirectory = "C:\Archive\rmm"
+    $targetDirectory = $TargetDirectory
     # Create a unique log file name in the user's temp directory.
     $logPath = Join-Path $env:TEMP "MSI-Install-Log-$((Get-Date).ToString('yyyy-MM-dd_HH-mm-ss')).log"
     $regexPattern = '^([^-]+)-AV' # Regex to capture the text before "-AV".
@@ -11,6 +19,10 @@ function Start-AgentDeployment {
     # --- Directory and File Validation ---
     while (-not (Test-Path -Path $targetDirectory -PathType Container)) {
         Write-Host "ERROR: The folder at '$targetDirectory' was not found." -ForegroundColor Red
+        if ($NonInteractive) {
+            Write-Host "Non-interactive mode: exiting (missing directory)." -ForegroundColor Yellow
+            return
+        }
         $choice = Read-Host "Please ensure the MSI files are present. Do you want to try again? (y/n)"
         if ($choice.ToLower() -ne 'y') {
             # If the user enters anything other than 'y', exit the script.
@@ -20,11 +32,13 @@ function Start-AgentDeployment {
     }
 
     # Get all .msi files matching the pattern *-AV_*.
-    $files = Get-ChildItem -Path $targetDirectory -Filter "*-AV_*.msi" -File | Select-Object FullName, BaseName
+    $files = Get-ChildItem -Path $targetDirectory -Filter $MsiPattern -File | Select-Object FullName, BaseName
 
     if ($null -eq $files) {
         Write-Host "No agent MSI files (*-AV_*.msi) were found in '$targetDirectory'." -ForegroundColor Yellow
-        Read-Host "Press Enter to exit."
+        if (-not $NoPause) {
+            Read-Host "Press Enter to exit."
+        }
         return
     }
 
@@ -44,23 +58,34 @@ function Start-AgentDeployment {
 
     if ($selectionList.Count -eq 0) {
         Write-Host "No files matched the expected naming convention to build the selection list." -ForegroundColor Yellow
-        Read-Host "Press Enter to exit."
+        if (-not $NoPause) {
+            Read-Host "Press Enter to exit."
+        }
         return
     }
 
     # --- Process User Selection ---
     $selection = 0
-    while ($selection -lt 1 -or $selection -gt $selectionList.Count) {
-        try {
-            $input = Read-Host "Enter the number of your choice"
-            $selection = [int]$input
-            if ($selection -lt 1 -or $selection -gt $selectionList.Count) {
-                Write-Host "Invalid number. Please enter a number between 1 and $($selectionList.Count)." -ForegroundColor Red
-            }
+    if ($NonInteractive) {
+        $selection = $Selection
+        if ($selection -lt 1 -or $selection -gt $selectionList.Count) {
+            Write-Host "Non-interactive mode: selection $selection is invalid. Exiting." -ForegroundColor Yellow
+            return
         }
-        catch {
-            Write-Host "Invalid input. Please enter a number." -ForegroundColor Red
-            $selection = 0
+    }
+    else {
+        while ($selection -lt 1 -or $selection -gt $selectionList.Count) {
+            try {
+                $input = Read-Host "Enter the number of your choice"
+                $selection = [int]$input
+                if ($selection -lt 1 -or $selection -gt $selectionList.Count) {
+                    Write-Host "Invalid number. Please enter a number between 1 and $($selectionList.Count)." -ForegroundColor Red
+                }
+            }
+            catch {
+                Write-Host "Invalid input. Please enter a number." -ForegroundColor Red
+                $selection = 0
+            }
         }
     }
 
@@ -112,11 +137,15 @@ Clear-Host
 if (-not ([System.Security.Principal.WindowsPrincipal][System.Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Warning "This script requires Administrator privileges to install software."
     Write-Warning "Please re-run this PowerShell session as an Administrator."
-    Read-Host "Press Enter to exit."
+    if (-not $NoPause) {
+        Read-Host "Press Enter to exit."
+    }
     exit
 }
 
 Start-AgentDeployment
 
 Write-Host ""
-Read-Host "Script finished. Press Enter to exit."
+if (-not $NoPause) {
+    Read-Host "Script finished. Press Enter to exit."
+}

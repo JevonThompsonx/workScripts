@@ -3,8 +3,13 @@ This script first cleans up any previous GCPW installation and then performs a
 fresh install and configuration. It is designed to be robust and idempotent.
 #>
 
+param(
+    [string]$DomainsAllowedToLogin = "ashleyvance.com",
+    [string]$GcpwUrl = "https://dl.google.com/credentialprovider/gcpwstandaloneenterprise64.msi"
+)
+
 # --- Configuration ---
-$domainsAllowedToLogin = "ashleyvance.com"
+$domainsAllowedToLogin = $DomainsAllowedToLogin
 
 #======================================================================
 # --- 1. Cleanup Phase: Remove any previous installation ---
@@ -54,7 +59,7 @@ $tempPath = $env:TEMP
 $installerName = "gcpwstandaloneenterprise64.msi"
 $destinationFile = Join-Path -Path $tempPath -ChildPath $installerName
 $logFile = Join-Path -Path $tempPath -ChildPath "gcpw_install.log"
-$gcpwUrl = 'https://dl.google.com/credentialprovider/gcpwstandaloneenterprise64.msi'
+$gcpwUrl = $GcpwUrl
 
 # Download the GCPW installer
 Write-Host "Downloading GCPW to $destinationFile..."

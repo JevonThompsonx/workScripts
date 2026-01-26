@@ -12,6 +12,12 @@ Online one-liner:
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/installingSoftware/installAllArchiveSoftwarev2.6.ps1')"
 ```
 
+Non-interactive (RMM):
+
+```powershell
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/installingSoftware/installAllArchiveSoftwarev2.6.ps1')" -NonInteractive
+```
+
 ## Other scripts in this folder
 
 - `installAllArchiveSoftwarev2.5.ps1` similar to v2.6 (no optional external debloat step).
@@ -20,6 +26,12 @@ powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercon
 - `installAllArchiveSoftwareNoWait2.bat` launches all installers without waiting (easy to overwhelm endpoints).
 - `installAllArchiveSoftware.bat` legacy; MSI handling is not reliable (prefer the PowerShell versions).
 - `ninjaOneInstall.ps1` helper to download + install NinjaOne agent (requires setting `$installerUrl` in the script).
+
+## RMM parameters
+
+- `installAllArchiveSoftwarev2.6.ps1`: `-NonInteractive` (implies `-NoPause` and skips debloat prompt unless `-RunDebloat`), `-RunDebloat`, `-SkipDebloatPrompt`, `-NoPause`.
+- `installAllArchiveSoftwarev2.5.ps1`: `-NonInteractive` or `-NoPause`.
+- `ninjaOneInstall.ps1`: `-NonInteractive` (skips prompts) and `-AllowReinstall`.
 
 ## Prerequisites
 

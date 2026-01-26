@@ -2,6 +2,10 @@
 # Run as Administrator
 # Purpose: Complete cleanup before fresh Egnyte install
 
+param(
+    [switch]$NoPause
+)
+
 #Requires -RunAsAdministrator
 
 $LogPath = "$env:TEMP\GoogleEgnyteCleanup_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
@@ -217,6 +221,11 @@ if ($remaining.Count -eq 0) {
 } else {
     Write-Host "      Some items remain (will clear after reboot):" -ForegroundColor Yellow
     $remaining | ForEach-Object { Write-Host "        - $_" -ForegroundColor DarkYellow }
+}
+
+if (-not $NoPause) {
+    Write-Host "`nPress Enter to exit..."
+    Read-Host | Out-Null
 }
 
 Remove-PSDrive -Name HKCR -ErrorAction SilentlyContinue

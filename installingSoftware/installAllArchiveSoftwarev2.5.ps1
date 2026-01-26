@@ -1,3 +1,12 @@
+param(
+    [switch]$NoPause,
+    [switch]$NonInteractive
+)
+
+if ($NonInteractive) {
+    $NoPause = $true
+}
+
 # Set the directory containing the installation files
 $INSTALL_DIR = "C:\Archive" # Base directory for installation files
 
@@ -13,7 +22,9 @@ $timestamp = Get-Date -Format "yyyyMMdd_HHmmss" # e.g., 20250509_083600
 # Check if the main installation directory exists
 if (-Not (Test-Path -Path $INSTALL_DIR -PathType Container)) {
     Write-Error "Critical Error: Installation directory '$INSTALL_DIR' not found or is not a directory. Script will exit."
-    Pause
+    if (-not $NoPause) {
+        Pause
+    }
     Exit 1
 }
 
@@ -25,7 +36,9 @@ if (-Not (Test-Path -Path $LOG_FOLDER_PATH -PathType Container)) {
     }
     catch {
         Write-Error "Critical Error: Could not create log folder at '$LOG_FOLDER_PATH'. Please check permissions. Error: $($_.Exception.Message). Script will exit."
-        Pause
+        if (-not $NoPause) {
+            Pause
+        }
         Exit 1
     }
 }
@@ -122,4 +135,6 @@ else {
 
 Write-Output ""
 Write-Output "Installation process completed. Review output for any warnings or errors."
-Pause
+if (-not $NoPause) {
+    Pause
+}

@@ -24,6 +24,19 @@
 # SCRIPT START
 #====================================================================================================
 
+param(
+    [switch]$NonInteractive,
+    [switch]$SkipArchiveInstall,
+    [switch]$SkipDebloat,
+    [switch]$RunRaphireDebloat,
+    [switch]$RunEngineeringDebloat,
+    [switch]$ConfirmEngineeringDebloat,
+    [switch]$SkipRmmInstall,
+    [int]$MinArchiveFileCount = 10,
+    [string]$RmmTargetDirectory = "C:\Archive\rmm",
+    [int]$RmmSelection = 1
+)
+
 # Step 0: Initial Setup and Administrator Check
 #----------------------------------------------------------------------------------------------------
 Write-Host "===========================================================" -ForegroundColor Cyan
@@ -35,24 +48,26 @@ Write-Host ""
 
 # Verify the script is running in an elevated (Administrator) session.
 if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
-    Write-Error "❌ This script requires Administrator privileges!"
+    Write-Error "[ERROR] This script requires Administrator privileges!"
     Write-Warning "Please right-click PowerShell and select 'Run as Administrator', then try again."
     # Pause for 10 seconds before exiting to allow user to read the message.
-    Start-Sleep -Seconds 10
+    if (-not $NonInteractive) {
+        Start-Sleep -Seconds 10
+    }
     exit 1
 }
 else {
-    Write-Host "✔️ Administrator privileges confirmed." -ForegroundColor Green
+    Write-Host "[OK] Administrator privileges confirmed." -ForegroundColor Green
 }
 
 # Bypass execution policy for the current process to ensure remote scripts can run.
 try {
     Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
-    Write-Host "✔️ Execution policy set to 'Bypass' for the current session." -ForegroundColor Green
+    Write-Host "[OK] Execution policy set to 'Bypass' for the current session." -ForegroundColor Green
     Write-Host ""
 }
 catch {
-    Write-Error "❌ Failed to set execution policy. Halting script."
+    Write-Error "[ERROR] Failed to set execution policy. Halting script."
     Start-Sleep -Seconds 5
     exit
 }
@@ -72,16 +87,21 @@ try {
     Remove-Item $tempBatFile -Force
 
     Write-Host "  -> Configuring Windows Settings (Dark Mode, Power Plan, UAC)..."
-    & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/setup_script_windows_settings1_3.ps1")))
+    if ($NonInteractive) {
+        & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/setup_script_windows_settings1_3.ps1"))) -NoPause
+    }
+    else {
+        & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/setup_script_windows_settings1_3.ps1")))
+    }
 
     Write-Host "  -> Applying Google Credentials Provider settings..."
     & ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/AllowGoogleCred.ps1")))
 
-    Write-Host "✔️ STEP 1 Complete: Windows Setup Scripts executed successfully." -ForegroundColor Green
+    Write-Host "[OK] STEP 1 Complete: Windows Setup Scripts executed successfully." -ForegroundColor Green
     Write-Host ""
 }
 catch {
-    Write-Error "❌ An error occurred during Windows Setup. Please check the output above."
+    Write-Error "[ERROR] An error occurred during Windows Setup. Please check the output above."
 }
 
 
@@ -172,7 +192,7 @@ catch {
     Write-Warning "Could not configure power plan settings: $($_.Exception.Message)"
 }
 
-Write-Host "✔️ STEP 1.5 Complete: Laptop-specific power settings configured." -ForegroundColor Green
+Write-Host "[OK] STEP 1.5 Complete: Laptop-specific power settings configured." -ForegroundColor Green
 Write-Host ""
 
 
@@ -182,11 +202,11 @@ Write-Host "STEP 2: Running Egnyte Drive Cloning Script..." -ForegroundColor Cya
 
 try {
     & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/drives/cloneDrives.ps1")))
-    Write-Host "✔️ STEP 2 Complete: Egnyte Drive Cloning script executed." -ForegroundColor Green
+    Write-Host "[OK] STEP 2 Complete: Egnyte Drive Cloning script executed." -ForegroundColor Green
     Write-Host ""
 }
 catch {
-    Write-Error "❌ An error occurred while cloning Egnyte drives."
+    Write-Error "[ERROR] An error occurred while cloning Egnyte drives."
 }
 
 
@@ -202,17 +222,22 @@ $egnyteApp = Get-Package -Name "Egnyte*" -ErrorAction SilentlyContinue
 if (-not $egnyteApp) {
     Write-Host "  -> Egnyte not found. Proceeding with installation..."
     try {
-        & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/updatingSoftware/Update-Egnyte-v1.5.ps1")))
-        Write-Host "✔️ STEP 3 Complete: Egnyte installation script executed." -ForegroundColor Green
+        if ($NonInteractive) {
+            & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/updatingSoftware/Update-Egnyte-v1.5.ps1"))) -NoPause
+        }
+        else {
+            & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/updatingSoftware/Update-Egnyte-v1.5.ps1")))
+        }
+        Write-Host "[OK] STEP 3 Complete: Egnyte installation script executed." -ForegroundColor Green
         Write-Host ""
     }
     catch {
-        Write-Error "❌ An error occurred while installing Egnyte."
+        Write-Error "[ERROR] An error occurred while installing Egnyte."
     }
 }
 # If the package IS found, skip the installation.
 else {
-    Write-Host "✔️ Egnyte is already installed. Skipping this step." -ForegroundColor Green
+    Write-Host "[OK] Egnyte is already installed. Skipping this step." -ForegroundColor Green
     Write-Host ""
 }
 
@@ -222,50 +247,58 @@ else {
 Write-Host "STEP 4: Installing Software from C:\Archive..." -ForegroundColor Cyan
 
 $archivePath = "C:\Archive"
-$minFileCount = 10
+$minFileCount = $MinArchiveFileCount
 $installScriptUrl = "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/installingSoftware/installAllArchiveSoftwarev2.6.ps1"
 
 function Run-Archive-Install {
     try {
         Write-Host "  -> Running software installation script..." -ForegroundColor Green
         & ([scriptblock]::Create((irm $installScriptUrl))) -SkipDebloatPrompt -NoPause
-        Write-Host "✔️ STEP 4 Complete: Software installation script executed." -ForegroundColor Green
+        Write-Host "[OK] STEP 4 Complete: Software installation script executed." -ForegroundColor Green
     }
     catch {
-        Write-Error "❌ An error occurred during the software installation."
+        Write-Error "[ERROR] An error occurred during the software installation."
     }
 }
 
 # Check if the archive folder exists and has more than the minimum number of files
-if ((Test-Path -Path $archivePath) -and ((Get-ChildItem -Path $archivePath).Count -gt $minFileCount)) {
+if ($SkipArchiveInstall) {
+    Write-Host "  -> Skipping archive software installation as requested." -ForegroundColor Yellow
+}
+elseif ((Test-Path -Path $archivePath) -and ((Get-ChildItem -Path $archivePath).Count -gt $minFileCount)) {
     Write-Host "  -> Archive folder found with more than $minFileCount files. Proceeding with installation."
     Run-Archive-Install
 }
 else {
     Write-Host "  -> The C:\Archive folder does not exist or has 10 or fewer files." -ForegroundColor Yellow
-    
-    # Loop to prompt the user for action
-    while ($true) {
-        $choice = Read-Host "  -> Please add files to C:\Archive now. Press 'y' to continue with installation, or 'n' to exit the script"
-        
-        if ($choice -eq 'y') {
-            # Re-check the condition after user intervention
-            if ((Test-Path -Path $archivePath) -and ((Get-ChildItem -Path $archivePath).Count -gt $minFileCount)) {
-                Write-Host "  -> Condition now met. Proceeding with installation." -ForegroundColor Green
-                Run-Archive-Install
+
+    if ($NonInteractive) {
+        Write-Host "  -> Non-interactive mode: skipping archive software installation." -ForegroundColor Yellow
+    }
+    else {
+        # Loop to prompt the user for action
+        while ($true) {
+            $choice = Read-Host "  -> Please add files to C:\Archive now. Press 'y' to continue with installation, or 'n' to exit the script"
+
+            if ($choice -eq 'y') {
+                # Re-check the condition after user intervention
+                if ((Test-Path -Path $archivePath) -and ((Get-ChildItem -Path $archivePath).Count -gt $minFileCount)) {
+                    Write-Host "  -> Condition now met. Proceeding with installation." -ForegroundColor Green
+                    Run-Archive-Install
+                    break # Exit the while loop
+                }
+                else {
+                    Write-Warning "  -> The archive folder is still not ready. Exiting script."
+                    break # Exit the while loop
+                }
+            }
+            elseif ($choice -eq 'n') {
+                Write-Host "  -> Exiting script as requested. The software installation was skipped." -ForegroundColor Yellow
                 break # Exit the while loop
             }
             else {
-                Write-Warning "  -> The archive folder is still not ready. Exiting script."
-                break # Exit the while loop
+                Write-Warning "  -> Invalid input. Please press 'y' to continue or 'n' to exit."
             }
-        }
-        elseif ($choice -eq 'n') {
-            Write-Host "  -> Exiting script as requested. The software installation was skipped." -ForegroundColor Yellow
-            break # Exit the while loop
-        }
-        else {
-            Write-Warning "  -> Invalid input. Please press 'y' to continue or 'n' to exit."
         }
     }
 }
@@ -279,38 +312,73 @@ Write-Host "  1. Raphire Debloat (https://debloat.raphi.re/)" -ForegroundColor G
 Write-Host "  2. Engineering Debloat (for engineering workflows)" -ForegroundColor Gray
 Write-Host "  3. Skip (do not run any debloat)" -ForegroundColor Gray
 
-while ($true) {
-    $debloatChoice = Read-Host "Please enter 1 (Basic), 2 (Engineering), or 3 (Skip)"
-    
-    switch ($debloatChoice) {
-        '1' {
-            Write-Host "  -> Running Raphire Debloat..." -ForegroundColor Green
-            try {
-                & ([scriptblock]::Create((irm "https://debloat.raphi.re/")))
-                Write-Host "✔️ Raphire Debloat completed successfully." -ForegroundColor Green
+if ($SkipDebloat) {
+    Write-Host "  -> Skipping debloat step as requested." -ForegroundColor Yellow
+}
+elseif ($NonInteractive) {
+    if ($RunEngineeringDebloat) {
+        Write-Host "  -> Running Engineering Debloat..." -ForegroundColor Green
+        try {
+            if ($ConfirmEngineeringDebloat) {
+                & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/engineeringDebloat.ps1"))) -NonInteractive -Mode All -ConfirmRemoval -NoPause
+                Write-Host "[OK] Engineering Debloat completed successfully." -ForegroundColor Green
             }
-            catch {
-                Write-Error "❌ An error occurred while running Raphire Debloat."
+            else {
+                Write-Warning "Non-interactive mode: set -ConfirmEngineeringDebloat to proceed. Skipping."
             }
-            break
         }
-        '2' {
-            Write-Host "  -> Running Engineering Debloat..." -ForegroundColor Green
-            try {
-                & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/engineeringDebloat.ps1")))
-                Write-Host "✔️ Engineering Debloat completed successfully." -ForegroundColor Green
-            }
-            catch {
-                Write-Error "❌ An error occurred while running Engineering Debloat."
-            }
-            break
+        catch {
+            Write-Error "[ERROR] An error occurred while running Engineering Debloat."
         }
-        '3' {
-            Write-Host "  -> Skipping debloat step as requested." -ForegroundColor Yellow
-            break
+    }
+    elseif ($RunRaphireDebloat) {
+        Write-Host "  -> Running Raphire Debloat..." -ForegroundColor Green
+        try {
+            & ([scriptblock]::Create((irm "https://debloat.raphi.re/")))
+            Write-Host "[OK] Raphire Debloat completed successfully." -ForegroundColor Green
         }
-        default {
-            Write-Warning "Invalid input. Please enter 1, 2, or 3."
+        catch {
+            Write-Error "[ERROR] An error occurred while running Raphire Debloat."
+        }
+    }
+    else {
+        Write-Host "  -> Non-interactive mode: no debloat option specified. Skipping." -ForegroundColor Yellow
+    }
+}
+else {
+    while ($true) {
+        $debloatChoice = Read-Host "Please enter 1 (Basic), 2 (Engineering), or 3 (Skip)"
+
+        switch ($debloatChoice) {
+            '1' {
+                Write-Host "  -> Running Raphire Debloat..." -ForegroundColor Green
+                try {
+                    & ([scriptblock]::Create((irm "https://debloat.raphi.re/")))
+                    Write-Host "[OK] Raphire Debloat completed successfully." -ForegroundColor Green
+                }
+                catch {
+                    Write-Error "[ERROR] An error occurred while running Raphire Debloat."
+                }
+                break
+            }
+            '2' {
+                Write-Host "  -> Running Engineering Debloat..." -ForegroundColor Green
+                try {
+                    & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/engineeringDebloat.ps1")))
+                    Write-Host "[OK] Engineering Debloat completed successfully." -ForegroundColor Green
+                }
+                catch {
+                    Write-Error "[ERROR] An error occurred while running Engineering Debloat."
+                }
+                break
+            }
+            '3' {
+                Write-Host "  -> Skipping debloat step as requested." -ForegroundColor Yellow
+                break
+            }
+            default {
+                Write-Warning "Invalid input. Please enter 1, 2, or 3."
+            }
         }
     }
 }
@@ -319,22 +387,30 @@ while ($true) {
 #----------------------------------------------------------------------------------------------------
 Write-Host "STEP 6: RMM install from C:\Archive\rmm..." -ForegroundColor Cyan
 
-$rmmPath = "C:\Archive\rmm"
+$rmmPath = $RmmTargetDirectory
 $installScriptUrl = "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/rmm.ps1"
 
 function Run-RMM-Install {
     try {
         Write-Host "  -> Running RMM installation script..." -ForegroundColor Green
-        & ([scriptblock]::Create((irm $installScriptUrl)))
-        Write-Host "✔️ STEP 6 Complete: RMM installation script executed." -ForegroundColor Green
+        if ($NonInteractive) {
+            & ([scriptblock]::Create((irm $installScriptUrl))) -NonInteractive -TargetDirectory $rmmPath -Selection $RmmSelection -NoPause
+        }
+        else {
+            & ([scriptblock]::Create((irm $installScriptUrl)))
+        }
+        Write-Host "[OK] STEP 6 Complete: RMM installation script executed." -ForegroundColor Green
     }
     catch {
-        Write-Error "❌ An error occurred during the RMM installation."
+        Write-Error "[ERROR] An error occurred during the RMM installation."
     }
 }
 
 # Check if RMM folder exists before attempting install
-if (Test-Path -Path $rmmPath) {
+if ($SkipRmmInstall) {
+    Write-Host "  -> Skipping RMM installation as requested." -ForegroundColor Yellow
+}
+elseif (Test-Path -Path $rmmPath) {
     Write-Host "  -> RMM folder found. Proceeding with installation."
     Run-RMM-Install
 }
@@ -346,4 +422,6 @@ Write-Host "===========================================================" -Foregr
 Write-Host "               MASTER SCRIPT FINISHED"
 Write-Host "===========================================================" -ForegroundColor Cyan
 # Pause at the end to allow the user to review the output.
-Read-Host "Press Enter to close this window..."
+if (-not $NonInteractive) {
+    Read-Host "Press Enter to close this window..."
+}

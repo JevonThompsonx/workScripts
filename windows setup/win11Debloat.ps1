@@ -1,7 +1,18 @@
+
 # Windows 10/11 Bulk App Uninstaller Script
 # Run this script as Administrator in PowerShell
 
 #Requires -RunAsAdministrator
+
+param(
+    [switch]$NonInteractive,
+    [ValidateSet("All","Win11","Xbox","List","Search","Exit")]
+    [string]$Mode = "All",
+    [string]$SearchTerm,
+    [switch]$ConfirmRemoval,
+    [switch]$NoPause
+)
+
 
 Write-Host "Windows 10/11 App Bulk Uninstaller" -ForegroundColor Green
 Write-Host "====================================" -ForegroundColor Green
@@ -10,7 +21,9 @@ Write-Host ""
 # Verify Administrator privileges
 if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
     Write-Error "This script requires Administrator privileges. Please run as Administrator."
-    Pause
+    if (-not $NoPause) {
+        Pause
+    }
     Exit 1
 }
 
@@ -269,6 +282,67 @@ function Remove-XboxGamingOverlay {
     catch {
         Write-Warning "Some Xbox components could not be removed. This is normal for protected system packages."
     }
+}
+
+# Non-interactive path
+if ($NonInteractive) {
+    switch ($Mode) {
+        "All" {
+            if ($ConfirmRemoval) {
+                Remove-AppPackages $AppsToRemove
+                Remove-XboxGamingOverlay
+            }
+            else {
+                Write-Warning "Non-interactive mode: use -ConfirmRemoval to proceed with ALL app removals."
+            }
+        }
+        "Win11" {
+            $Win11Apps = @(
+                "Microsoft.Todos"
+                "Microsoft.PowerAutomateDesktop"
+                "MicrosoftTeams"
+                "Microsoft.Teams"
+                "Clipchamp.Clipchamp"
+                "Microsoft.BingNews"
+                "Microsoft.GamingApp"
+                "Microsoft.GetHelp"
+                "Microsoft.Getstarted"
+                "Microsoft.MicrosoftOfficeHub"
+                "Microsoft.People"
+                "Microsoft.Windows.Photos"
+                "Microsoft.WindowsAlarms"
+                "Microsoft.WindowsCamera"
+                "Microsoft.windowscommunicationsapps"
+                "Microsoft.WindowsFeedbackHub"
+                "Microsoft.WindowsMaps"
+                "Microsoft.WindowsSoundRecorder"
+                "Microsoft.Xbox.TCUI"
+                "Microsoft.XboxIdentityProvider"
+                "Microsoft.XboxGameOverlay"
+                "Microsoft.XboxGamingOverlay"
+                "Microsoft.XboxApp"
+                "Microsoft.YourPhone"
+                "Microsoft.ZuneMusic"
+                "Microsoft.ZuneVideo"
+            )
+            Remove-AppPackages $Win11Apps
+            Remove-XboxGamingOverlay
+        }
+        "Xbox" { Remove-XboxGamingOverlay }
+        "List" { Show-InstalledApps }
+        "Search" {
+            if ([string]::IsNullOrWhiteSpace($SearchTerm)) {
+                Write-Warning "Non-interactive mode: provide -SearchTerm for Mode Search."
+            }
+            else {
+                Find-Apps $SearchTerm
+            }
+        }
+        default { }
+    }
+
+    Write-Host "`nScript completed!" -ForegroundColor Green
+    exit 0
 }
 
 # Main menu

@@ -1,8 +1,18 @@
+
 # Complete Engineering Software Uninstaller
 # Run this script as Administrator in PowerShell
 # This script performs DEEP removal including registry, temp files, and services
 
 #Requires -RunAsAdministrator
+
+param(
+    [switch]$NonInteractive,
+    [ValidateSet("All","Autodesk","Vectorworks","Bluebeam","SolidWorks","Bentley","List","Cleanup","Exit")]
+    [string]$Mode = "Exit",
+    [switch]$ConfirmRemoval,
+    [switch]$NoPause
+)
+
 
 Write-Host "Engineering Software Complete Removal Tool" -ForegroundColor Green
 Write-Host "=========================================" -ForegroundColor Green
@@ -11,7 +21,9 @@ Write-Host ""
 # Verify Administrator privileges
 if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
     Write-Error "This script requires Administrator privileges. Please run as Administrator."
-    Pause
+    if (-not $NoPause) {
+        Pause
+    }
     Exit 1
 }
 
@@ -657,6 +669,104 @@ function Remove-TempFiles {
             Write-Host "Could not clean temp files: $TempPath" -ForegroundColor Red
         }
     }
+}
+
+# Non-interactive path
+if ($NonInteractive) {
+    switch ($Mode) {
+        "All" {
+            if ($ConfirmRemoval) {
+                Stop-EngineeringServices
+                Remove-EngineeringSoftware $EngineeringSoftware
+                Remove-RegistryEntries
+                Remove-LeftoverFolders
+                Remove-TempFiles
+            }
+            else {
+                Write-Warning "Non-interactive mode: use -ConfirmRemoval to proceed with ALL removals."
+            }
+        }
+        "Autodesk" {
+            $AutodeskOnly = @{"Autodesk" = $EngineeringSoftware["Autodesk"]}
+            Stop-EngineeringServices
+            Remove-EngineeringSoftware $AutodeskOnly
+            Remove-RegistryEntries
+            Remove-LeftoverFolders
+            Remove-TempFiles
+        }
+        "Vectorworks" {
+            $VectorworksOnly = @{"Vectorworks" = $EngineeringSoftware["Vectorworks"]}
+            Remove-EngineeringSoftware $VectorworksOnly
+        }
+        "Bluebeam" {
+            $BluebeamOnly = @{"Bluebeam" = $EngineeringSoftware["Bluebeam"]}
+            Remove-EngineeringSoftware $BluebeamOnly
+        }
+        "SolidWorks" {
+            $SolidWorksOnly = @{"SolidWorks" = $EngineeringSoftware["SolidWorks"]}
+            Remove-EngineeringSoftware $SolidWorksOnly
+        }
+        "Bentley" {
+            $BentleyOnly = @{"BentleyMicrostation" = $EngineeringSoftware["BentleyMicrostation"]}
+            Remove-EngineeringSoftware $BentleyOnly
+        }
+        "List" {
+            Write-Host "`nScanning for installed engineering software..." -ForegroundColor Cyan
+            Write-Host "This may take a moment..." -ForegroundColor Yellow
+
+            $EngineeringPatterns = @(
+                "*AutoCAD*", "*Autodesk*", "*Vectorworks*", "*Bluebeam*",
+                "*SolidWorks*", "*Civil 3D*", "*Bentley*", "*MicroStation*",
+                "*ANSYS*", "*MATLAB*", "*ArcGIS*", "*SketchUp*", "*Rhino*",
+                "*Tekla*", "*ETABS*", "*SAP2000*", "*RISA*", "*Revit*"
+            )
+
+            $InstalledSoftware = @()
+
+            $UninstallPaths = @(
+                "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+                "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
+            )
+
+            foreach ($Path in $UninstallPaths) {
+                try {
+                    $Apps = Get-ChildItem -Path $Path -ErrorAction SilentlyContinue |
+                        Get-ItemProperty -ErrorAction SilentlyContinue |
+                        Where-Object {
+                            $DisplayName = $_.DisplayName
+                            $DisplayName -and ($EngineeringPatterns | Where-Object {$DisplayName -like $_})
+                        } |
+                        Select-Object DisplayName, DisplayVersion, Publisher |
+                        Where-Object {$_.DisplayName}
+
+                    $InstalledSoftware += $Apps
+                }
+                catch {
+                    continue
+                }
+            }
+
+            $InstalledSoftware = $InstalledSoftware | Sort-Object DisplayName -Unique
+
+            if ($InstalledSoftware.Count -gt 0) {
+                Write-Host "`nFound $($InstalledSoftware.Count) engineering software package(s):`n" -ForegroundColor Green
+                $InstalledSoftware | Format-Table -Property DisplayName, DisplayVersion, Publisher -AutoSize
+            }
+            else {
+                Write-Host "`nNo engineering software found." -ForegroundColor Green
+            }
+        }
+        "Cleanup" {
+            Remove-RegistryEntries
+            Remove-LeftoverFolders
+            Remove-TempFiles
+        }
+        default { }
+    }
+
+    Write-Host "`nEngineering software removal completed!" -ForegroundColor Green
+    Write-Host "It's recommended to restart your computer to complete the cleanup." -ForegroundColor Yellow
+    exit 0
 }
 
 # Main execution menu

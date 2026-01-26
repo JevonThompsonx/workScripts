@@ -4,10 +4,16 @@ installs it, and configures the allowed login domain.
 Version 1.2: Correctly waits for installer and does not exit the parent process.
 #>
 
-$domainsAllowedToLogin = "ashleyvance.com"
-$destinationFolder = "C:\Archive"
+param(
+    [string]$DomainsAllowedToLogin = "ashleyvance.com",
+    [string]$DestinationFolder = "C:\Archive",
+    [string]$GcpwUrl = "https://dl.google.com/credentialprovider/gcpwstandaloneenterprise64.msi"
+)
+
+$domainsAllowedToLogin = $DomainsAllowedToLogin
+$destinationFolder = $DestinationFolder
 $destinationFile = Join-Path $destinationFolder "gcpwstandaloneenterprise64.msi"
-$gcpwUrl = 'https://dl.google.com/credentialprovider/gcpwstandaloneenterprise64.msi'
+$gcpwUrl = $GcpwUrl
 
 # Ensure the destination directory exists
 if (-not (Test-Path -Path $destinationFolder)) {

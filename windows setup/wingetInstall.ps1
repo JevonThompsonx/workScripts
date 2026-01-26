@@ -1,3 +1,13 @@
+param(
+    [switch]$NoPause,
+    [switch]$NonInteractive
+)
+
+if ($NonInteractive) {
+    $NoPause = $true
+}
+
+
 # --- Configuration for Testing ---
 $INSTALL_DIR = "C:\Archive" # Base directory for logs
 $LOG_SUBFOLDER_NAME = "InstallLogs"
@@ -23,7 +33,9 @@ if (-Not (Test-Path -Path $LOG_FOLDER_PATH -PathType Container)) {
     }
     catch {
         Write-Error "Critical Error: Could not create log folder at '$LOG_FOLDER_PATH'. Please check permissions. Error: $($_.Exception.Message). Script will exit."
-        Pause
+        if (-not $NoPause) {
+            Pause
+        }
         Exit 1 # Exit if cannot create log folder for test
     }
 }
@@ -90,4 +102,6 @@ catch {
 }
 Write-Output "" # Blank line for readability
 Write-Output "Winget installation test completed. Press any key to continue..."
-Pause
+if (-not $NoPause) {
+    Pause
+}

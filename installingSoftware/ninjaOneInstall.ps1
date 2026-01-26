@@ -14,7 +14,9 @@
 param(
     [int]$DownloadTimeoutSec = 300,  # 5 minutes for download
     [int]$InstallTimeoutSec = 600,   # 10 minutes for installation
-    [switch]$KeepInstaller
+    [switch]$KeepInstaller,
+    [switch]$NonInteractive,
+    [switch]$AllowReinstall
 )
 
 $ErrorActionPreference = 'Stop'
@@ -63,10 +65,16 @@ try {
     $ninjaInstalled = Get-WmiObject -Class Win32_Product | Where-Object { $_.Name -like "*NinjaOne*" }
     if ($ninjaInstalled) {
         Write-Log "NinjaOne is already installed: $($ninjaInstalled.Name) (Version: $($ninjaInstalled.Version))" "WARN"
-        $continue = Read-Host "Continue with reinstallation? (Y/N)"
-        if ($continue -ne 'Y') {
-            Write-Log "Installation cancelled by user"
+        if ($NonInteractive -and -not $AllowReinstall) {
+            Write-Log "Non-interactive mode: skipping reinstallation" "WARN"
             exit 0
+        }
+        if (-not $NonInteractive) {
+            $continue = Read-Host "Continue with reinstallation? (Y/N)"
+            if ($continue -ne 'Y') {
+                Write-Log "Installation cancelled by user"
+                exit 0
+            }
         }
     }
 

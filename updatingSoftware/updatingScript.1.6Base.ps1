@@ -8,24 +8,25 @@
 # It is not specific to any one application.
 # It is a template that can be used to create a script for any application.
 
+param(
+    [string]$DownloadUrl = "https://prod.setup.itsupport247.net/windows/BareboneAgent/32/Los_Angeles-AV_Windows_OS_ITSPlatform_TKN44e7fc4b-5b83-460f-bd20-4f43911e2672/MSI/setup",
+    [string]$LocalDirectory = "C:\Archive",
+    [string]$FileName = "LArmm.msi",
+    [string[]]$CriticalProcesses = @(),
+    [switch]$NoPause
+)
+
 # --- Configuration ---
-$downloadUrl = "https://prod.setup.itsupport247.net/windows/BareboneAgent/32/Los_Angeles-AV_Windows_OS_ITSPlatform_TKN44e7fc4b-5b83-460f-bd20-4f43911e2672/MSI/setup"
-$localDirectory = "C:\Archive"
-$fileName = "LArmm.msi"
+$downloadUrl = $DownloadUrl
+$localDirectory = $LocalDirectory
+$fileName = $FileName
 $localPath = Join-Path -Path $localDirectory -ChildPath $fileName # Safely combines path and filename
 
 # --- [NEW] Pre-Flight Check for Running Applications ---
 Write-Host "Performing pre-flight check for open applications..."
 
-# Add the process names (without .exe) of critical apps that use Egnyte
-$criticalProcesses = @(
- #App processes names to check for here: 
- #egs: "appName1", "appName2", "appName3"
- # To check for process names, run the following command in PowerShell:v
- # Get-Process 
- # This will list all running processes and their process names.
- # Copy the process names and add them to the array above.
-)
+# Add the process names (without .exe) via -CriticalProcesses
+$criticalProcesses = $CriticalProcesses
 
 # --- MODIFICATION START ---
 # Only check for processes if the array is not empty
@@ -59,6 +60,14 @@ if (-not (Test-Path -Path $localDirectory)) {
  New-Item -ItemType Directory -Path $localDirectory | Out-Null
 }
 
+# Ensure TLS 1.2+ is enabled for downloads
+try {
+ [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
+}
+catch {
+ [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+}
+
 # Download the Egnyte MSI file
 Write-Host "Downloading the Egnyte installer to $localPath..."
 try {
@@ -80,8 +89,17 @@ $msiArgs = @(
 )
 
 try {
- Start-Process msiexec -ArgumentList $msiArgs -Wait -NoNewWindow
- Write-Host "Egnyte update installation complete."
+ $process = Start-Process msiexec -ArgumentList $msiArgs -Wait -NoNewWindow -PassThru
+ $exitCode = $process.ExitCode
+ if ($exitCode -ne 0 -and $exitCode -ne 3010) {
+  Write-Host "MSI installation failed with exit code $exitCode."
+  exit 1
+ }
+ if ($exitCode -eq 3010) {
+  Write-Host "MSI installation completed successfully. Reboot required."
+  exit 3010
+ }
+ Write-Host "MSI installation complete."
 }
 catch {
  Write-Host "Error during installation: $_"

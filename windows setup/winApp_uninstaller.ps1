@@ -1,5 +1,15 @@
+param(
+    [switch]$NonInteractive,
+    [ValidateSet("Remove","List","Search","Exit")]
+    [string]$Mode = "Exit",
+    [string]$SearchTerm,
+    [switch]$ConfirmRemoval
+)
+
 # Windows 10 Bulk App Uninstaller Script
 # Run this script as Administrator in PowerShell
+
+#Requires -RunAsAdministrator
 
 Write-Host "Windows 10 App Bulk Uninstaller" -ForegroundColor Green
 Write-Host "=================================" -ForegroundColor Green
@@ -127,6 +137,68 @@ function Find-Apps {
     
     Write-Host "`nSearching for apps matching '$SearchTerm':" -ForegroundColor Cyan
     Get-AppxPackage | Where-Object Name -like "*$SearchTerm*" | Select-Object Name, PackageFullName | Format-Table -AutoSize
+}
+
+param(
+    [switch]$NonInteractive,
+    [ValidateSet("Remove","List","Search","Exit")]
+    [string]$Mode = "Exit",
+    [string]$SearchTerm,
+    [switch]$ConfirmRemoval
+)
+
+# Non-interactive path
+if ($NonInteractive) {
+    switch ($Mode) {
+        "Remove" {
+            if ($ConfirmRemoval) {
+                Remove-AppPackages $AppsToRemove
+            }
+            else {
+                Write-Warning "Non-interactive mode: use -ConfirmRemoval to proceed with removal."
+            }
+        }
+        "List" { Show-InstalledApps }
+        "Search" {
+            if ([string]::IsNullOrWhiteSpace($SearchTerm)) {
+                Write-Warning "Non-interactive mode: provide -SearchTerm for Mode Search."
+            }
+            else {
+                Find-Apps $SearchTerm
+            }
+        }
+        default { }
+    }
+
+    Write-Host "`nScript completed!" -ForegroundColor Green
+    exit 0
+}
+
+# Non-interactive path
+if ($NonInteractive) {
+    switch ($Mode) {
+        "Remove" {
+            if ($ConfirmRemoval) {
+                Remove-AppPackages $AppsToRemove
+            }
+            else {
+                Write-Warning "Non-interactive mode: use -ConfirmRemoval to proceed with removal."
+            }
+        }
+        "List" { Show-InstalledApps }
+        "Search" {
+            if ([string]::IsNullOrWhiteSpace($SearchTerm)) {
+                Write-Warning "Non-interactive mode: provide -SearchTerm for Mode Search."
+            }
+            else {
+                Find-Apps $SearchTerm
+            }
+        }
+        default { }
+    }
+
+    Write-Host "`nScript completed!" -ForegroundColor Green
+    exit 0
 }
 
 # Main menu

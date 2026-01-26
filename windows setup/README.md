@@ -24,6 +24,12 @@ Windows settings (current):
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/windows%20setup/setup_script_windows_settings1_3.ps1')"
 ```
 
+Non-interactive:
+
+```powershell
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/windows%20setup/setup_script_windows_settings1_3.ps1')" -NoPause
+```
+
 GCWP (recommended):
 
 ```powershell
@@ -43,6 +49,20 @@ powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercon
 - `AllowGCWPv1.3.ps1`, `AllowGCWPv1.2.ps1` older GCWP variants.
 - `rmm.ps1` installs an RMM agent MSI from `C:\Archive\rmm` (expects `*-AV_*.msi` naming).
 - `engineeringDebloat.ps1` deep removal of engineering apps (destructive; use with care).
+
+## RMM parameters
+
+- `setup_script_windows_settings1_3.ps1`: `-NoPause` (non-interactive).
+- `setup_scriptv1.5.ps1`: `-NoPause`.
+- `win11Debloat.ps1`: `-NonInteractive`, `-Mode` (`All|Win11|Xbox|List|Search|Exit`), `-ConfirmRemoval`, `-SearchTerm`, `-NoPause`.
+- `winApp_uninstaller.ps1`: `-NonInteractive`, `-Mode` (`Remove|List|Search|Exit`), `-ConfirmRemoval`, `-SearchTerm`.
+- `engineeringDebloat.ps1`: `-NonInteractive`, `-Mode` (`All|Autodesk|Vectorworks|Bluebeam|SolidWorks|Bentley|List|Cleanup|Exit`), `-ConfirmRemoval`, `-NoPause`.
+- `wingetInstall.ps1`: `-NonInteractive` or `-NoPause`.
+- `rmm.ps1`: `-NonInteractive`, `-TargetDirectory`, `-MsiPattern`, `-Selection`, `-NoPause`.
+- `AllowGoogleCred.ps1`: `-DomainsAllowedToLogin`, `-DestinationFolder`, `-GcpwUrl`.
+- `AllowGoogleCredentials.ps1`: `-DomainsAllowedToLogin`, `-DestinationFolder`, `-GcpwUrl`, `-DownloadWaitSec`.
+- `AllowGCWPv1.3.ps1`: `-DomainsAllowedToLogin`, `-GcpwUrl`.
+- `AllowGCWPv1.2.ps1`: `-DomainsAllowedToLogin`, `-DestinationFolder`, `-GcpwUrl`.
 
 ## Notes
 

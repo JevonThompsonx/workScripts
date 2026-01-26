@@ -5,7 +5,7 @@ PowerShell scripts that download an MSI, run a silent install, and clean up afte
 ## Scripts in this folder
 
 - `Update-Egnyte-v1.0.ps1` basic Egnyte MSI download + install (no pre-flight checks).
-- `Update-Egnyte-v1.5.ps1` Egnyte MSI download + install with pre-flight checks (edit `$downloadUrl` when Egnyte versions change).
+- `Update-Egnyte-v1.5.ps1` Egnyte MSI download + install with pre-flight checks.
 - `Update-MSI-Application-Base-v1.5.ps1` template for updating any MSI with pre-flight checks.
 - `updatingScript.1.6Base.ps1` newer template that also handles an empty critical-process list.
 - `DONTUSE-Uninstall-Update-Egnytev2.1.ps1` legacy/experimental (not recommended).
@@ -20,6 +20,13 @@ See `updatingSoftware/egnyteNukeAndUpdate/README.md` for full Egnyte removal + r
 2. If needed for the session: `Set-ExecutionPolicy RemoteSigned -Scope Process -Force` (or `Bypass`).
 3. Edit the script configuration (`$downloadUrl`, `$fileName`, `$localDirectory`, `$criticalProcesses`).
 4. Run the script.
+
+## RMM parameters
+
+- `Update-Egnyte-v1.5.ps1`: `-DownloadUrl`, `-LocalDirectory`, `-FileName`, `-CriticalProcesses`, `-NoPause`.
+- `Update-Egnyte-v1.0.ps1`: `-DownloadUrl`, `-LocalDirectory`, `-FileName`.
+- `Update-MSI-Application-Base-v1.5.ps1`: `-DownloadUrl`, `-LocalDirectory`, `-FileName`, `-CriticalProcesses`, `-NoPause`.
+- `updatingScript.1.6Base.ps1`: `-DownloadUrl`, `-LocalDirectory`, `-FileName`, `-CriticalProcesses`, `-NoPause`.
 
 ## Notes
 

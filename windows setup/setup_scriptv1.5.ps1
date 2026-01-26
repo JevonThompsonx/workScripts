@@ -35,10 +35,16 @@
 # SCRIPT INITIALIZATION
 #===================================================================================================
 
+param(
+    [switch]$NoPause
+)
+
 # Step 1: Check for Administrator Privileges
 if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Warning "Administrator rights required. Please re-run this script as an Administrator."
-    Read-Host "Press Enter to exit..."
+    if (-not $NoPause) {
+        Read-Host "Press Enter to exit..."
+    }
     exit
 }
 
@@ -245,4 +251,6 @@ Write-Host "`n------------------------------------------------------------------
 Write-Host "Script execution finished." -ForegroundColor Cyan
 Write-Warning "A full system RESTART is recommended to apply all changes (especially UAC)."
 Write-Host "--------------------------------------------------------------------" -ForegroundColor Cyan
-Read-Host "Press Enter to exit..."
+if (-not $NoPause) {
+    Read-Host "Press Enter to exit..."
+}

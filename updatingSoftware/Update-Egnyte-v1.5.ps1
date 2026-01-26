@@ -6,60 +6,73 @@
 
 #Requires -RunAsAdministrator
 
+param(
+    [string]$DownloadUrl = "https://egnyte-cdn.egnyte.com/egnytedrive/win/en-us/latest/EgnyteConnectWin.msi",
+    [string]$LocalDirectory = "C:\Archive",
+    [string]$FileName = "EgnyteSetup.msi",
+    [string[]]$CriticalProcesses = @(
+        "WINWORD",
+        "EXCEL",
+        "POWERPNT",
+        "OUTLOOK",
+        "acad",
+        "Vectorworks",
+        "Vectorworks2024",
+        "Vectorworks2025",
+        "Vectorworks2020",
+        "Vectorworks2021",
+        "Vectorworks2022",
+        "Vectorworks2023",
+        "Vectorworks2024",
+        "PDFXchange",
+        "PDFXEdit",
+        "ENERCALC",
+        "ETABS",
+        "Revu",
+        "risa3dw"
+    ),
+    [switch]$NoPause
+)
+
 # Verify Administrator privileges
 if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
     Write-Error "This script requires Administrator privileges. Please run as Administrator."
-    Pause
+    if (-not $NoPause) {
+        Pause
+    }
     Exit 1
 }
 
 # --- Configuration ---
-$downloadUrl = "https://egnyte-cdn.egnyte.com/egnytedrive/win/en-us/latest/EgnyteConnectWin.msi"
-$localDirectory = "C:\Archive"
-$fileName = "EgnyteSetup.msi"
+$downloadUrl = $DownloadUrl
+$localDirectory = $LocalDirectory
+$fileName = $FileName
 $localPath = Join-Path -Path $localDirectory -ChildPath $fileName # Safely combines path and filename
 
 # --- [NEW] Pre-Flight Check for Running Applications ---
 Write-Host "Performing pre-flight check for open applications..."
 
-# Add the process names (without .exe) of critical apps that use Egnyte
-$criticalProcesses = @(
-    "WINWORD", # Microsoft Word
-    "EXCEL", # Microsoft Excel
-    "POWERPNT", # Microsoft PowerPoint
-    "OUTLOOK", # Microsoft Outlook (can lock files via attachments)
-    "acad", # For AutoCAD / Civil 3D
-    "Vectorworks",
-    "Vectorworks2024",
-    "Vectorworks2025",
-    "Vectorworks2020",
-    "Vectorworks2021",
-    "Vectorworks2022",
-    "Vectorworks2023",
-    "Vectorworks2024",
-    "PDFXchange", # For PDF-XChange Editor
-    "PDFXEdit",
-    "ENERCALC",
-    "ETABS",
-    "Revu",
-    "risa3dw"
-    
-    # Add any other relevant application process names here
-)
+# Add the process names (without .exe) via -CriticalProcesses when needed
+$criticalProcesses = $CriticalProcesses
 
 # Check if any of the critical processes are running
-$runningProcesses = Get-Process -Name $criticalProcesses -ErrorAction SilentlyContinue
+if ($criticalProcesses.Count -gt 0) {
+    $runningProcesses = Get-Process -Name $criticalProcesses -ErrorAction SilentlyContinue
 
-if ($null -ne $runningProcesses) {
-    # If any processes are found, list them, warn the user, and exit the script.
-    $runningAppNames = $runningProcesses.ProcessName -join ', '
-    Write-Warning "Update aborted. The following critical application(s) are running: $runningAppNames"
-    Write-Warning "Please close these applications and re-run the script."
-    exit 99 # Use a custom exit code to identify this specific failure reason
+    if ($null -ne $runningProcesses) {
+        # If any processes are found, list them, warn the user, and exit the script.
+        $runningAppNames = $runningProcesses.ProcessName -join ', '
+        Write-Warning "Update aborted. The following critical application(s) are running: $runningAppNames"
+        Write-Warning "Please close these applications and re-run the script."
+        exit 99 # Use a custom exit code to identify this specific failure reason
+    }
+    else {
+        # If no processes are found, continue with the script.
+        Write-Host "Pre-flight check passed. No conflicting applications are running."
+    }
 }
 else {
-    # If no processes are found, continue with the script.
-    Write-Host "Pre-flight check passed. No conflicting applications are running."
+    Write-Host "Pre-flight check skipped: No critical processes were specified."
 }
 # --- [END NEW SECTION] ---
 

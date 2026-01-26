@@ -18,7 +18,13 @@
     Dark Mode settings are applied per-user (to the account running the script).
 #>
 
+
 #Requires -RunAsAdministrator
+
+param(
+    [switch]$NonInteractive,
+    [switch]$NoPause
+)
 
 Write-Host "Starting system setup script..." -ForegroundColor Cyan
 Write-Host "Running as Administrator: $((([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)))"

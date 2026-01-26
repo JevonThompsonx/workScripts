@@ -6,38 +6,44 @@
 # This script is a base script that can be used to update any software.
 # It is not specific to any one application.
 # It is a template that can be used to create a script for any application.
+param(
+    [string]$DownloadUrl = "linkHere",
+    [string]$LocalDirectory = "C:\Archive",
+    [string]$FileName = "desiredNameHere.msi",
+    [string[]]$CriticalProcesses = @(),
+    [switch]$NoPause
+)
+
 # --- Configuration ---
-$downloadUrl = "linkHere"
-$localDirectory = "C:\Archive"
-$fileName = "desiredNameHere.msi"
+$downloadUrl = $DownloadUrl
+$localDirectory = $LocalDirectory
+$fileName = $FileName
 $localPath = Join-Path -Path $localDirectory -ChildPath $fileName # Safely combines path and filename
 
 # --- [NEW] Pre-Flight Check for Running Applications ---
 Write-Host "Performing pre-flight check for open applications..."
 
-# Add the process names (without .exe) of critical apps that use Egnyte
-$criticalProcesses = @(
-    #App processes names to check for here: 
-    #egs: "appName1", "appName2", "appName3"
-    # To check for process names, run the following command in PowerShell:
-    # Get-Process 
-    # This will list all running processes and their process names.
-    # Copy the process names and add them to the array above.
-)
+# Add the process names (without .exe) via -CriticalProcesses when needed
+$criticalProcesses = $CriticalProcesses
 
 # Check if any of the critical processes are running
-$runningProcesses = Get-Process -Name $criticalProcesses -ErrorAction SilentlyContinue
+if ($criticalProcesses.Count -gt 0) {
+    $runningProcesses = Get-Process -Name $criticalProcesses -ErrorAction SilentlyContinue
 
-if ($null -ne $runningProcesses) {
-    # If any processes are found, list them, warn the user, and exit the script.
-    $runningAppNames = $runningProcesses.ProcessName -join ', '
-    Write-Warning "Update aborted. The following critical application(s) are running: $runningAppNames"
-    Write-Warning "Please close these applications and re-run the script."
-    exit 99 # Use a custom exit code to identify this specific failure reason
+    if ($null -ne $runningProcesses) {
+        # If any processes are found, list them, warn the user, and exit the script.
+        $runningAppNames = $runningProcesses.ProcessName -join ', '
+        Write-Warning "Update aborted. The following critical application(s) are running: $runningAppNames"
+        Write-Warning "Please close these applications and re-run the script."
+        exit 99 # Use a custom exit code to identify this specific failure reason
+    }
+    else {
+        # If no processes are found, continue with the script.
+        Write-Host "Pre-flight check passed. No conflicting applications are running."
+    }
 }
 else {
-    # If no processes are found, continue with the script.
-    Write-Host "Pre-flight check passed. No conflicting applications are running."
+    Write-Host "Pre-flight check skipped: No critical processes were specified."
 }
 # --- [END NEW SECTION] ---
 
@@ -47,6 +53,14 @@ else {
 # Create the destination directory if it doesn't exist
 if (-not (Test-Path -Path $localDirectory)) {
     New-Item -ItemType Directory -Path $localDirectory | Out-Null
+}
+
+# Ensure TLS 1.2+ is enabled for downloads
+try {
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
+}
+catch {
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 }
 
 # Download the Egnyte MSI file
@@ -70,8 +84,17 @@ $msiArgs = @(
 )
 
 try {
-    Start-Process msiexec -ArgumentList $msiArgs -Wait -NoNewWindow
-    Write-Host "Egnyte update installation complete."
+    $process = Start-Process msiexec -ArgumentList $msiArgs -Wait -NoNewWindow -PassThru
+    $exitCode = $process.ExitCode
+    if ($exitCode -ne 0 -and $exitCode -ne 3010) {
+        Write-Host "MSI installation failed with exit code $exitCode."
+        exit 1
+    }
+    if ($exitCode -eq 3010) {
+        Write-Host "MSI installation completed successfully. Reboot required."
+        exit 3010
+    }
+    Write-Host "MSI installation complete."
 }
 catch {
     Write-Host "Error during installation: $_"

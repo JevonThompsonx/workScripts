@@ -21,7 +21,13 @@
     UI/Shell changes apply to the user running the script and restart explorer.exe.
 #>
 
+
 #Requires -RunAsAdministrator
+
+param(
+    [switch]$NonInteractive,
+    [switch]$NoPause
+)
 
 # --- Helper Functions for Taskbar Customization ---
 function Remove-TaskbarPin {

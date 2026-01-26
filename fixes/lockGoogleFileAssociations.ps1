@@ -6,7 +6,8 @@
 #Requires -RunAsAdministrator
 
 param(
-    [switch]$Unlock  # Use -Unlock to reverse
+    [switch]$Unlock,  # Use -Unlock to reverse
+    [switch]$NoPause
 )
 
 $LogPath = "$env:TEMP\GoogleAssocLock_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
@@ -105,6 +106,10 @@ if ($Unlock) {
     Write-Host "`n=== Unlock Complete ===" -ForegroundColor Cyan
     Write-Host "Google Drive can now reclaim associations if reinstalled." -ForegroundColor White
     Stop-Transcript -ErrorAction SilentlyContinue | Out-Null
+    if (-not $NoPause) {
+        Write-Host "`nPress Enter to exit..."
+        Read-Host | Out-Null
+    }
     exit 0
 }
 
@@ -315,3 +320,7 @@ Start-Sleep -Seconds 1
 Start-Process explorer
 
 Stop-Transcript -ErrorAction SilentlyContinue | Out-Null
+if (-not $NoPause) {
+    Write-Host "`nPress Enter to exit..."
+    Read-Host | Out-Null
+}
