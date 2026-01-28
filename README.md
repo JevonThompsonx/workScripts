@@ -21,7 +21,7 @@ powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercon
 Non-interactive with Raphire debloat:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Run-All-Work-Scriptsv1.2.ps1')" -NonInteractive -RunRaphireDebloat
+& ([scriptblock]::Create((irm "https://debloat.raphi.re/"))) -RunDefaults
 ```
 
 ## RMM one-liner (no C:\Archive installs)
