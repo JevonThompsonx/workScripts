@@ -17,7 +17,7 @@
 .NOTES
     Author: Jevon Thompson (Created by Gemini)
     Date: 2025-07-22
-    Version: 1.2
+    Version: 1.3
 #>
 
 #====================================================================================================
@@ -28,9 +28,6 @@ param(
     [switch]$NonInteractive,
     [switch]$SkipArchiveInstall,
     [switch]$SkipDebloat,
-    [switch]$RunRaphireDebloat,
-    [switch]$RunEngineeringDebloat,
-    [switch]$ConfirmEngineeringDebloat,
     [switch]$SkipRmmInstall,
     [int]$MinArchiveFileCount = 10,
     [string]$RmmTargetDirectory = "C:\Archive\rmm",
@@ -303,83 +300,21 @@ else {
     }
 }
 
-# Step 5: Windows Debloat (User Choice)
+# Step 5: Windows Debloat (Raphire Win11Debloat)
 #----------------------------------------------------------------------------------------------------
-Write-Host "STEP 5: Windows Debloat Options..." -ForegroundColor Cyan
-
-Write-Host "You can choose to run one of the following debloat scripts:" -ForegroundColor Yellow
-Write-Host "  1. Raphire Debloat (https://debloat.raphi.re/)" -ForegroundColor Gray
-Write-Host "  2. Engineering Debloat (for engineering workflows)" -ForegroundColor Gray
-Write-Host "  3. Skip (do not run any debloat)" -ForegroundColor Gray
+Write-Host "STEP 5: Running Windows Debloat (Raphire)..." -ForegroundColor Cyan
 
 if ($SkipDebloat) {
     Write-Host "  -> Skipping debloat step as requested." -ForegroundColor Yellow
 }
-elseif ($NonInteractive) {
-    if ($RunEngineeringDebloat) {
-        Write-Host "  -> Running Engineering Debloat..." -ForegroundColor Green
-        try {
-            if ($ConfirmEngineeringDebloat) {
-                & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/engineeringDebloat.ps1"))) -NonInteractive -Mode All -ConfirmRemoval -NoPause
-                Write-Host "[OK] Engineering Debloat completed successfully." -ForegroundColor Green
-            }
-            else {
-                Write-Warning "Non-interactive mode: set -ConfirmEngineeringDebloat to proceed. Skipping."
-            }
-        }
-        catch {
-            Write-Error "[ERROR] An error occurred while running Engineering Debloat."
-        }
-    }
-    elseif ($RunRaphireDebloat) {
-        Write-Host "  -> Running Raphire Debloat..." -ForegroundColor Green
-        try {
-            & ([scriptblock]::Create((irm "https://debloat.raphi.re/")))
-            Write-Host "[OK] Raphire Debloat completed successfully." -ForegroundColor Green
-        }
-        catch {
-            Write-Error "[ERROR] An error occurred while running Raphire Debloat."
-        }
-    }
-    else {
-        Write-Host "  -> Non-interactive mode: no debloat option specified. Skipping." -ForegroundColor Yellow
-    }
-}
 else {
-    while ($true) {
-        $debloatChoice = Read-Host "Please enter 1 (Basic), 2 (Engineering), or 3 (Skip)"
-
-        switch ($debloatChoice) {
-            '1' {
-                Write-Host "  -> Running Raphire Debloat..." -ForegroundColor Green
-                try {
-                    & ([scriptblock]::Create((irm "https://debloat.raphi.re/")))
-                    Write-Host "[OK] Raphire Debloat completed successfully." -ForegroundColor Green
-                }
-                catch {
-                    Write-Error "[ERROR] An error occurred while running Raphire Debloat."
-                }
-                break
-            }
-            '2' {
-                Write-Host "  -> Running Engineering Debloat..." -ForegroundColor Green
-                try {
-                    & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/engineeringDebloat.ps1")))
-                    Write-Host "[OK] Engineering Debloat completed successfully." -ForegroundColor Green
-                }
-                catch {
-                    Write-Error "[ERROR] An error occurred while running Engineering Debloat."
-                }
-                break
-            }
-            '3' {
-                Write-Host "  -> Skipping debloat step as requested." -ForegroundColor Yellow
-                break
-            }
-            default {
-                Write-Warning "Invalid input. Please enter 1, 2, or 3."
-            }
-        }
+    Write-Host "  -> Running Raphire Win11Debloat with default settings..." -ForegroundColor Green
+    try {
+        & ([scriptblock]::Create((irm "https://debloat.raphi.re/"))) -RunDefaults -Silent
+        Write-Host "[OK] STEP 5 Complete: Raphire Debloat completed successfully." -ForegroundColor Green
+    }
+    catch {
+        Write-Error "[ERROR] An error occurred while running Raphire Debloat."
     }
 }
 
