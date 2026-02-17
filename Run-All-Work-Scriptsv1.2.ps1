@@ -15,7 +15,7 @@
         and provides an option to re-check and continue or to exit.
 
 .NOTES
-    Author: Jevon Thompson (Created by Gemini)
+    Author: Jevon Thompson
     Date: 2025-07-22
     Version: 1.3
 #>
