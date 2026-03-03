@@ -41,7 +41,7 @@
     System-level configuration only -- no taskbar or software changes.
 
 .NOTES
-    Author:  Jevon Thompson
+    Author:  IT Systems Administrator
     Version: 2.0.0
     Date:    2026-03-03
     Exit Codes:
