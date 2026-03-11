@@ -1,8 +1,8 @@
 # workScripts
 
-PowerShell and batch scripts for Windows provisioning and common IT operations (setup/debloat, Egnyte mapping, software installs/updates, and a few utilities).
+PowerShell and batch scripts for Windows provisioning and common IT operations.
 
-Most scripts require an elevated PowerShell.
+This repo includes Windows setup/debloat scripts, drive mapping helpers, software install/update tooling, printer deployment templates, and a few small utilities. Most scripts are meant for elevated PowerShell, and some are designed to run through an RMM.
 
 ## Quick start (online)
 
@@ -24,9 +24,9 @@ Non-interactive with Raphire debloat:
 & ([scriptblock]::Create((irm "https://debloat.raphi.re/"))) -RunDefaults
 ```
 
-## RMM one-liner (no C:\Archive installs)
+## RMM one-liner (no `C:\Archive` installs)
 
-Use the dedicated RMM runner with a forced Administrator password and no C:\Archive installs (skipped by design):
+Use the dedicated RMM runner with a forced Administrator password and no `C:\Archive` installs (skipped by design):
 
 ```powershell
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Run-All-Work-Scriptsv1.2-RMM.ps1')" -AdministratorPassword "<YOUR_PASSWORD>"
@@ -64,7 +64,7 @@ Allow Google Credential Provider for Windows (GCWP) settings:
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/windows%20setup/AllowGoogleCred.ps1')"
 ```
 
-Clone Egnyte drive mapping BATs to `C:\Archive\Map egnyte drives`:
+Clone drive mapping BATs to `C:\Archive\Map egnyte drives`:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/drives/cloneDrives.ps1')"
@@ -82,11 +82,41 @@ Non-interactive:
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/installingSoftware/installAllArchiveSoftwarev2.6.ps1')" -NonInteractive
 ```
 
+## Printer scripts
+
+The `Printer-Scripts/` folder contains a public-safe printer deployment template set for Windows.
+
+It includes:
+
+- install-all printer deployment
+- install-selected printer deployment
+- delete-and-reinstall selected printers
+- a generalized printer swap script
+- shared helper functions
+- a config-driven printer definition file
+- a dedicated README explaining how to adapt the scripts
+
+Notes:
+
+- The public printer package is sanitized for GitHub
+- Real internal printer names, site identifiers, private IPs, and company-specific paths were removed
+- Sample values live in `Printer-Scripts/PrinterConfig.psd1`
+- Vendor driver binaries are not included in the public template
+- See `Printer-Scripts/README.md` for setup and customization details
+
 ## Folder guide
 
-- `drives/` Egnyte mapping scripts (BAT presets + downloader). See `drives/README.md`.
-- `fixes/` Egnyte + Google Drive file association cleanup/lock scripts. See `fixes/README.md`.
-- `installingSoftware/` bulk installers for `C:\Archive` + NinjaOne agent installer helper. See `installingSoftware/README.md`.
-- `updatingSoftware/` MSI update templates + Egnyte update/nuke flows. See `updatingSoftware/README.md`.
-- `windows setup/` Windows setup/debloat scripts and helpers (folder name includes a space). See `windows setup/README.md`.
+- `Printer-Scripts/` sanitized Windows printer deployment templates and documentation. See `Printer-Scripts/README.md`.
+- `drives/` drive mapping scripts (BAT presets + downloader). See `drives/README.md`.
+- `fixes/` file association cleanup/lock scripts. See `fixes/README.md`.
+- `installingSoftware/` bulk installers for `C:\Archive` + agent installer helper. See `installingSoftware/README.md`.
+- `updatingSoftware/` MSI update templates and software update/nuke flows. See `updatingSoftware/README.md`.
+- `windows setup/` Windows setup/debloat scripts and helpers. See `windows setup/README.md`.
 - `proxmox/` small Proxmox/Linux helper scripts. See `proxmox/README.md`.
+
+## Notes
+
+- Most scripts require elevated PowerShell
+- Test deployment scripts in a lab or non-production environment first
+- Review script contents before using them in your environment
+- Some scripts assume Windows-specific paths, admin rights, or RMM execution context
