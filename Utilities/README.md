@@ -1,15 +1,19 @@
-# fixes
+← [Back to root](../README.md)
 
-Egnyte + Google Drive coexistence fix for Google file formats (`.gdoc`, `.gsheet`, `.gslides`).
+# Utilities
 
-## Scripts in this folder
+Google file association fix/lock scripts, printer deployment templates, and Proxmox helpers.
 
-- `cleanupGoogleFileAssociations.ps1` (cleanup/reset) removes conflicting registry keys and any prior ACL locks.
-- `lockGoogleFileAssociations.ps1` (lock) applies a deny ACL so Google Drive cannot hijack associations again (supports `-Unlock`).
+## Scripts
 
-## One-liners (online)
+| File | Description | Elevation | Key Parameters |
+|------|-------------|-----------|----------------|
+| [cleanupGoogleFileAssociations.ps1](cleanupGoogleFileAssociations.ps1) | Resets Google file associations (`.gdoc`, `.gsheet`, `.gslides`) so Egnyte can claim them (v6) | Required | `-NoPause` |
+| [lockGoogleFileAssociations.ps1](lockGoogleFileAssociations.ps1) | Locks Google file associations to Egnyte via deny ACL; supports `-Unlock` to reverse (v5) | Required | `-Unlock`, `-NoPause` |
 
-Cleanup/reset:
+## Usage
+
+### cleanupGoogleFileAssociations.ps1
 
 ```powershell
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Utilities/cleanupGoogleFileAssociations.ps1')"
@@ -20,6 +24,8 @@ Non-interactive:
 ```powershell
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Utilities/cleanupGoogleFileAssociations.ps1')" -NoPause
 ```
+
+### lockGoogleFileAssociations.ps1
 
 Lock:
 
@@ -33,34 +39,24 @@ Non-interactive:
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Utilities/lockGoogleFileAssociations.ps1')" -NoPause
 ```
 
-## Objective
+Reverse the ACL lock:
 
-Force Windows to use the Egnyte Desktop App for Google file formats while allowing Google Drive for Desktop to remain installed for other uses.
+```powershell
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Utilities/lockGoogleFileAssociations.ps1')" -Unlock
+```
 
-## The problem
+## Google + Egnyte coexistence workflow
 
-Both Egnyte and Google Drive attempt to claim file associations for Google formats.
-
-- Google Drive tries to overwrite user associations (HKCU) on startup.
-- Egnyte sets system associations (HKCR) during installation.
-
-When both are installed, `UserChoice` keys can become corrupted and files may stop opening or open in the wrong app.
-
-## The solution methodology
-
-Use a "clean, assert, and lock" strategy:
-
-1. Run `cleanupGoogleFileAssociations.ps1` to wipe the association state.
-2. Reboot.
-3. Install Egnyte (Egnyte becomes the system default handler).
-4. Run `lockGoogleFileAssociations.ps1` to deny writes to the per-user association keys.
-5. Reinstall Google Drive (it can run, but cannot take over `.gdoc`/`.gsheet`/`.gslides`).
-
-## Deployment workflow
+Force Windows to use the Egnyte Desktop App for Google file formats while keeping Google Drive for Desktop installed:
 
 1. Uninstall Google Drive and Egnyte.
-2. Run the cleanup script.
+2. Run `cleanupGoogleFileAssociations.ps1`.
 3. Reboot.
-4. Install Egnyte.
-5. Run the lock script.
+4. Install Egnyte (Egnyte becomes the system default handler).
+5. Run `lockGoogleFileAssociations.ps1`.
 6. Reinstall Google Drive.
+
+## Subfolders
+
+- [`Printer-Scripts/`](Printer-Scripts/README.md) — sanitized Windows printer deployment template (config-driven, RMM-adaptable)
+- [`proxmox/`](proxmox/README.md) — Proxmox/Linux VM helpers

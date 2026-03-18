@@ -1,10 +1,14 @@
+← [Back to Utilities](../README.md)
+
 # proxmox
 
 Small Proxmox/Linux helper scripts.
 
 ## Scripts
 
-- `setIPAddress.sh` updates a VM's Netplan config, resets machine-id (useful for cloned VMs), and runs `netplan apply`.
+| File | Description | Elevation | Key Parameters |
+|------|-------------|-----------|----------------|
+| [setIPAddress.sh](setIPAddress.sh) | Updates a VM's Netplan config, resets machine-id (for cloned VMs), and runs `netplan apply` | Required (root) | (edit variables at top of script) |
 
 ## Usage
 

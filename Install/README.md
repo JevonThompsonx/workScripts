@@ -1,44 +1,41 @@
-# installingSoftware
+← [Back to root](../README.md)
 
-Bulk installers that run everything found in `C:\Archive`.
+# Install
 
-## Recommended script
+Bulk installers that run every MSI and EXE found in `C:\Archive`, plus a NinjaOne agent helper.
 
-- `installAllArchiveSoftwarev2.6.ps1` (recommended) installs `.msi` files silently with per-MSI logs and launches `.exe` installers interactively. It also offers an optional external debloat step.
+## Scripts
 
-Online one-liner:
+| File | Description | Elevation | Key Parameters |
+|------|-------------|-----------|----------------|
+| [installAllArchiveSoftwarev2.6.ps1](installAllArchiveSoftwarev2.6.ps1) | Installs all `.msi`/`.exe` files from `C:\Archive`; MSIs run silently with per-file logs, EXEs run interactively (v2.6) | Required | `-NonInteractive`, `-RunDebloat`, `-SkipDebloatPrompt`, `-NoPause` |
+| [ninjaOneInstall.ps1](ninjaOneInstall.ps1) | Downloads and installs the NinjaOne RMM agent (set `$installerUrl` in the script before running) | Required | `-NonInteractive`, `-AllowReinstall`, `-DownloadTimeoutSec`, `-InstallTimeoutSec` |
+| [installAllArchiveSoftwarev2SilentInstall.bat](installAllArchiveSoftwarev2SilentInstall.bat) | Runs EXEs with UI and MSIs silently via `msiexec /qn`; logs to `%TEMP%` | Required | (none) |
+| [install_AllArchive_Softwarev2_InteractiveInstall.bat](install_AllArchive_Softwarev2_InteractiveInstall.bat) | Runs both EXEs and MSIs with full UI | Required | (none) |
+
+## Usage
+
+### installAllArchiveSoftwarev2.6.ps1
 
 ```powershell
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Install/installAllArchiveSoftwarev2.6.ps1')"
 ```
 
-Non-interactive (RMM):
+Non-interactive / RMM:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Install/installAllArchiveSoftwarev2.6.ps1')" -NonInteractive
 ```
 
-## Other scripts in this folder
-
-- `installAllArchiveSoftwarev2.5.ps1` similar to v2.6 (no optional external debloat step).
-- `installAllArchiveSoftwarev2SilentInstall.bat` runs EXEs with UI and MSIs via `msiexec /qn` (logs to `%TEMP%`).
-- `install_AllArchive_Softwarev2_InteractiveInstall.bat` runs EXEs with UI and MSIs with UI.
-- `installAllArchiveSoftwareNoWait2.bat` launches all installers without waiting (easy to overwhelm endpoints).
-- `installAllArchiveSoftware.bat` legacy; MSI handling is not reliable (prefer the PowerShell versions).
-- `ninjaOneInstall.ps1` helper to download + install NinjaOne agent (requires setting `$installerUrl` in the script).
-
-## RMM parameters
-
-- `installAllArchiveSoftwarev2.6.ps1`: `-NonInteractive` (implies `-NoPause` and skips debloat prompt unless `-RunDebloat`), `-RunDebloat`, `-SkipDebloatPrompt`, `-NoPause`.
-- `installAllArchiveSoftwarev2.5.ps1`: `-NonInteractive` or `-NoPause`.
-- `ninjaOneInstall.ps1`: `-NonInteractive` (skips prompts) and `-AllowReinstall`.
-
 ## Prerequisites
 
-- `C:\Archive` exists and contains the installers you want to run (`.msi` and/or `.exe`).
-- Run PowerShell scripts in an elevated PowerShell.
+- `C:\Archive` must exist and contain the `.msi` and/or `.exe` installers to run.
+- Run in an elevated PowerShell session.
 
 ## Logging
 
-- `installAllArchiveSoftwarev2.5.ps1` and `installAllArchiveSoftwarev2.6.ps1` create logs under `C:\Archive\InstallLogs`.
-- Some BAT variants log to `%TEMP%`.
+Logs are written to `C:\Archive\InstallLogs` (one log file per MSI).
+
+## Subfolders
+
+- [`updatingSoftware/`](updatingSoftware/README.md) — Egnyte update scripts and nuke/reinstall flows
