@@ -1,19 +1,27 @@
-# drives
+← [Back to root](../README.md)
 
-Egnyte drive mapping helpers.
+# Networking
 
-## What is in this folder
+Egnyte drive-mapping BAT presets and the `cloneDrives` downloader.
 
-- `cloneDrives.ps1` downloads all `.bat` mapping presets from `JevonThompsonx/eDrives` into `C:\Archive\Map egnyte drives`.
-- `*.bat` mapping presets that call `EgnyteClient.exe` to add/remove drive letters.
+## Scripts
 
-## Prerequisites
+| File | Description | Elevation | Key Parameters |
+|------|-------------|-----------|----------------|
+| [cloneDrives.ps1](cloneDrives.ps1) | Downloads all `.bat` mapping presets from `JevonThompsonx/eDrives` into `C:\Archive\Map egnyte drives` | Not required | (none) |
+| [Civil Drives.bat](Civil%20Drives.bat) | Maps Civil Engineering Egnyte drives | Not required | (none) |
+| [Civil Drives - wJLT.bat](Civil%20Drives%20-%20wJLT.bat) | Maps Civil Engineering Egnyte drives (JLT variant) | Not required | (none) |
+| [Civil BAK.bat](Civil%20BAK.bat) | Maps Civil BAK Egnyte drives | Not required | (none) |
+| [Structural Drives.bat](Structural%20Drives.bat) | Maps Structural Engineering Egnyte drives | Not required | (none) |
+| [Shared Services.bat](Shared%20Services.bat) | Maps Shared Services Egnyte drives | Not required | (none) |
+| [Shared Servicesv2.bat](Shared%20Servicesv2.bat) | Maps Shared Services Egnyte drives (v2) | Not required | (none) |
+| [Spare Computer Drives.bat](Spare%20Computer%20Drives.bat) | Maps Spare Computer Egnyte drives (SSO) | Not required | (none) |
+| [Spare Computer Drives-No SSO.bat](Spare%20Computer%20Drives-No%20SSO.bat) | Maps Spare Computer Egnyte drives (no SSO) | Not required | (none) |
+| [Remove All Drives.bat](Remove%20All%20Drives.bat) | Removes all mapped Egnyte drives | Not required | (none) |
 
-- Egnyte Connect installed (these BATs assume `C:\Program Files (x86)\Egnyte Connect\EgnyteClient.exe`).
-- User is signed in to Egnyte.
-- The BAT presets are hardcoded for the `ashleyvance` domain; edit the `-d` value if your Egnyte domain differs.
+## Usage
 
-## Quick start
+### cloneDrives.ps1
 
 Download the latest BAT presets to `C:\Archive\Map egnyte drives`:
 
@@ -21,21 +29,15 @@ Download the latest BAT presets to `C:\Archive\Map egnyte drives`:
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Networking/cloneDrives.ps1')"
 ```
 
-Then run the desired mapping BAT (either from `C:\Archive\Map egnyte drives` or from this folder).
+Then run the desired mapping BAT from `C:\Archive\Map egnyte drives` or directly from this folder.
 
-## Included BAT presets
+## Prerequisites
 
-- `Civil Drives.bat`
-- `Civil Drives - wJLT.bat`
-- `Civil BAK.bat`
-- `Structural Drives.bat`
-- `Shared Services.bat`
-- `Shared Servicesv2.bat`
-- `Spare Computer Drives.bat`
-- `Spare Computer Drives-No SSO.bat`
-- `Remove All Drives.bat`
+- Egnyte Connect installed (`C:\Program Files (x86)\Egnyte Connect\EgnyteClient.exe`).
+- User is signed in to Egnyte.
+- The BAT presets are hardcoded for the `ashleyvance` domain; edit the `-d` value if your Egnyte domain differs.
 
 ## Notes
 
 - These scripts manage Egnyte drive mappings (via Egnyte Connect), not Windows SMB drive mappings.
-- If SSO is not available/configured, use the `*-No SSO.bat` preset or edit `-sso` arguments.
+- If SSO is not configured, use `Spare Computer Drives-No SSO.bat` or edit `-sso` arguments in the desired preset.

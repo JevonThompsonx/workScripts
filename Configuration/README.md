@@ -1,71 +1,38 @@
-# windows setup
+← [Back to root](../README.md)
 
-Scripts for initial Windows configuration (power/UAC/theme), debloat, and a few deployment helpers.
+# Configuration
 
-Most scripts require an elevated PowerShell.
+Windows 11 settings baseline scripts: power plan, UAC, dark mode, taskbar tweaks, and Winget installer.
 
-## Recommended order (fresh machine)
+## Scripts
 
-1. `enable_admin.bat` (enable the built-in local Administrator account)
-2. `setup_script_windows_settings1_3.ps1` (system settings + UI tweaks)
-3. `AllowGoogleCred.ps1` (install/configure Google Credential Provider for Windows)
+| File | Description | Elevation | Key Parameters |
+|------|-------------|-----------|----------------|
+| [setup_script_windows_settings1_3.ps1](setup_script_windows_settings1_3.ps1) | Windows 11 settings baseline: power plan, hibernation off, UAC disable, dark mode, taskbar tweaks (v1.3) | Required | `-NoPause`, `-SkipTaskbar`, `-SkipBloatware` |
+| [setup_scriptv1.5.ps1](setup_scriptv1.5.ps1) | Older comprehensive setup + debloat: power, UAC, dark mode, privacy tweaks, taskbar, `C:\Archive` creation | Required | `-NoPause` |
+| [wingetInstall.ps1](wingetInstall.ps1) | Installs Winget (Windows Package Manager) from the latest GitHub release; logs to `C:\Archive\InstallLogs` | Required | `-NoPause`, `-NonInteractive` |
 
-## One-liners (online)
+## Usage
 
-Enable local Administrator:
-
-```powershell
-powershell -ExecutionPolicy Bypass -Command "$tempBat = Join-Path $env:TEMP 'enable_admin.bat'; irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Accounts/enable_admin.bat' -OutFile $tempBat; & $tempBat"
-```
-
-Windows settings (current):
+### setup_script_windows_settings1_3.ps1
 
 ```powershell
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Configuration/setup_script_windows_settings1_3.ps1')"
 ```
 
-Non-interactive:
+Non-interactive (`-NoPause` skips the end-of-script pause):
 
 ```powershell
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Configuration/setup_script_windows_settings1_3.ps1')" -NoPause
 ```
 
-GCWP (recommended):
+### wingetInstall.ps1
 
 ```powershell
-powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Accounts/AllowGoogleCred.ps1')"
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Configuration/wingetInstall.ps1')"
 ```
-
-## Scripts in this folder
-
-- `setup_script_windows_settings1_3.ps1` current system settings script (power plan, hibernation, UAC disable + reboot required, Dark Mode, basic taskbar tweaks; may remove OneDrive/Teams and restart Explorer).
-- `setup_script_windows_settings1_2.ps1`, `setup_script_windows_settings1.ps1` older variants.
-- `setup_scriptv1.5.ps1` older, more comprehensive setup/debloat script.
-- `win11Debloat.ps1` bulk Appx bloatware removal (many apps enabled; review before running).
-- `winApp_uninstaller.ps1` menu-driven Appx remover (expects you to edit/uncomment package names).
-- `wingetInstall.ps1` installs Winget from the latest GitHub release and logs to `C:\Archive\InstallLogs`.
-- `AllowGoogleCred.ps1` installs and configures Google Credential Provider for Windows (includes uninstall of old versions + registry fix).
-- `AllowGoogleCredentials.ps1` legacy GCWP installer/config script.
-- `AllowGCWPv1.3.ps1`, `AllowGCWPv1.2.ps1` older GCWP variants.
-- `rmm.ps1` installs an RMM agent MSI from `C:\Archive\rmm` (expects `*-AV_*.msi` naming).
-- `engineeringDebloat.ps1` deep removal of engineering apps (destructive; use with care).
-
-## RMM parameters
-
-- `setup_script_windows_settings1_3.ps1`: `-NoPause` (non-interactive).
-- `setup_scriptv1.5.ps1`: `-NoPause`.
-- `win11Debloat.ps1`: `-NonInteractive`, `-Mode` (`All|Win11|Xbox|List|Search|Exit`), `-ConfirmRemoval`, `-SearchTerm`, `-NoPause`.
-- `winApp_uninstaller.ps1`: `-NonInteractive`, `-Mode` (`Remove|List|Search|Exit`), `-ConfirmRemoval`, `-SearchTerm`.
-- `engineeringDebloat.ps1`: `-NonInteractive`, `-Mode` (`All|Autodesk|Vectorworks|Bluebeam|SolidWorks|Bentley|List|Cleanup|Exit`), `-ConfirmRemoval`, `-NoPause`.
-- `wingetInstall.ps1`: `-NonInteractive` or `-NoPause`.
-- `rmm.ps1`: `-NonInteractive`, `-TargetDirectory`, `-MsiPattern`, `-Selection`, `-NoPause`.
-- `AllowGoogleCred.ps1`: `-DomainsAllowedToLogin`, `-DestinationFolder`, `-GcpwUrl`.
-- `AllowGoogleCredentials.ps1`: `-DomainsAllowedToLogin`, `-DestinationFolder`, `-GcpwUrl`, `-DownloadWaitSec`.
-- `AllowGCWPv1.3.ps1`: `-DomainsAllowedToLogin`, `-GcpwUrl`.
-- `AllowGCWPv1.2.ps1`: `-DomainsAllowedToLogin`, `-DestinationFolder`, `-GcpwUrl`.
 
 ## Notes
 
-- Several scripts disable UAC; plan for a reboot.
-- Some scripts restart `explorer.exe` to apply UI changes.
-- Folder name includes a space (`windows setup`); quote paths when running locally.
+- `setup_script_windows_settings1_3.ps1` disables UAC; a reboot is required for that change to take effect.
+- Explorer restarts at the end of the settings script to apply UI changes (screen flashes briefly).

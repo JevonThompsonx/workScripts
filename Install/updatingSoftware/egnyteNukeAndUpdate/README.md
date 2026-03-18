@@ -1,48 +1,52 @@
-# Egnyte Nuke & Update - NinjaOne RMM Edition
+← [Back to updatingSoftware](../README.md)
+
+# Egnyte Nuke & Update — NinjaOne RMM Edition
 
 Enterprise-grade PowerShell scripts for complete Egnyte removal and reinstallation via NinjaOne RMM. Designed for mass deployment across 300+ endpoints.
 
+## Scripts
+
+| File | Description | Elevation | Key Parameters |
+|------|-------------|-----------|----------------|
+| [NinjaOne-Egnyte-Nuke.ps1](NinjaOne-Egnyte-Nuke.ps1) | Enterprise Egnyte removal for NinjaOne RMM (stage 1) | Required | `-ForceReboot`, `-RebootDelaySeconds` |
+| [NinjaOne-Egnyte-Install.ps1](NinjaOne-Egnyte-Install.ps1) | Enterprise Egnyte installer/updater for NinjaOne RMM (stage 2) | Required | `-DownloadUrl`, `-SkipIfInstalled`, `-MinimumVersion` |
+| [Egnyte-Nuke.ps1](Egnyte-Nuke.ps1) | Legacy manual Egnyte removal with forced reboot | Required | (none) |
+| [Egnyte-NukeNoRestart.ps1](Egnyte-NukeNoRestart.ps1) | Legacy manual Egnyte removal without forced reboot | Required | (none) |
+| [Egnyte-Update.ps1](Egnyte-Update.ps1) | Legacy manual Egnyte installer | Required | (none) |
+| [DryRun-Egnyte-Nuke.ps1](DryRun-Egnyte-Nuke.ps1) | Validates what the nuke would remove; no destructive actions | Required | (none) |
+| [Test-EgnyteDetection.ps1](Test-EgnyteDetection.ps1) | Detects whether Egnyte is installed (registry, processes, services, folders) | Required | (none) |
+
 ---
 
-## Quick Start - Legacy Scripts (One-Liner Remote Execution)
+## Quick Start — Legacy Scripts (One-Liner Remote Execution)
 
 For quick manual fixes or ad-hoc deployments, use these one-liners in an **elevated PowerShell** window:
 
 ### Step 1: Nuke Egnyte
+
 ```powershell
-& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Install/updatingSoftware/egnyteNukeAndUpdate/Egnyte-Nuke.ps1")))
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Install/updatingSoftware/egnyteNukeAndUpdate/Egnyte-Nuke.ps1')"
 ```
 
 ### Step 2: Reboot
+
 ```powershell
 Restart-Computer -Force
 ```
 
 ### Step 3: Install Latest Egnyte
 
-**Option A - Direct MSI Download:**
+**Option A — Direct MSI Download:**
+
 ```
 https://egnyte-cdn.egnyte.com/egnytedrive/win/en-us/latest/EgnyteConnectWin.msi
 ```
 
-**Option B - Run Install Script:**
+**Option B — Run Install Script:**
+
 ```powershell
-& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Install/updatingSoftware/egnyteNukeAndUpdate/Egnyte-Update.ps1")))
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Install/updatingSoftware/egnyteNukeAndUpdate/Egnyte-Update.ps1')"
 ```
-
----
-
-## Scripts Overview
-
-| Script | Purpose | When to Use |
-|--------|---------|-------------|
-| `NinjaOne-Egnyte-Nuke.ps1` | Complete Egnyte removal | Stage 1 - Before clean install or troubleshooting |
-| `NinjaOne-Egnyte-Install.ps1` | Install/Update Egnyte | Stage 2 - After nuke or for updates |
-| `Egnyte-Nuke.ps1` | Legacy manual removal script | Manual/ad-hoc use |
-| `Egnyte-Update.ps1` | Legacy manual install script | Manual/ad-hoc use |
-| `Egnyte-NukeNoRestart.ps1` | Legacy removal without forcing reboot | Manual/ad-hoc use when you want to control reboot timing |
-| `DryRun-Egnyte-Nuke.ps1` | Dry-run of removal steps | Validation/troubleshooting (no destructive actions) |
-| `Test-EgnyteDetection.ps1` | Detects whether Egnyte is installed | Troubleshooting and automation condition checks |
 
 ---
 
@@ -262,9 +266,9 @@ Set-ExecutionPolicy -Scope Process Bypass
 ```
 
 ### Running Remotely Without Download
+
 ```powershell
-# From GitHub (if you host there)
-& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/YourOrg/YourRepo/main/NinjaOne-Egnyte-Nuke.ps1")))
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Install/updatingSoftware/egnyteNukeAndUpdate/NinjaOne-Egnyte-Nuke.ps1')"
 ```
 
 ---

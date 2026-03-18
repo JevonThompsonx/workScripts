@@ -1,17 +1,19 @@
-# Sanitized Printer Scripts
+← [Back to Utilities](../README.md)
 
-GitHub-safe PowerShell printer deployment scripts by Jevon Thompson.
+# Printer-Scripts
 
-This folder is a sanitized template package for Windows printer deployment. It removes business-specific office names, real internal paths, and real LAN IP addresses from the exported scripts while preserving the workflow and structure needed to adapt them for another environment.
+Sanitized Windows printer deployment template scripts by Jevon Thompson.
 
-## Included Files
+## Scripts
 
-- `InstallAllPrinters.ps1` - installs every printer defined in `PrinterConfig.psd1`
-- `InstallSelectedPrinters.ps1` - installs only selected printers by config key
-- `DeletesAndReinstallsSelectedPrinters.ps1` - removes matching queues, ports, and drivers, then reinstalls selected printers
-- `Swap-Printer.ps1` - swaps one existing printer queue for a replacement printer definition
-- `PrinterConfig.psd1` - sanitized sample configuration with placeholder printers and paths
-- `PrinterCommon.ps1` - shared helper functions used by all scripts
+| File | Description | Elevation | Key Parameters |
+|------|-------------|-----------|----------------|
+| [InstallAllPrinters.ps1](InstallAllPrinters.ps1) | Installs every printer defined in `PrinterConfig.psd1` | Required | `-BasePath` |
+| [InstallSelectedPrinters.ps1](InstallSelectedPrinters.ps1) | Installs only selected printers by config key | Required | `-BasePath`, `-PrinterKeys`, `-InstallAll` |
+| [DeletesAndReinstallsSelectedPrinters.ps1](DeletesAndReinstallsSelectedPrinters.ps1) | Removes matching queues/ports/drivers, then reinstalls selected printers | Required | `-BasePath`, `-PrinterKeys` |
+| [Swap-Printer.ps1](Swap-Printer.ps1) | Swaps an existing printer queue for a replacement printer definition | Required | `-OldPrinterName`, `-OldDriverName`, `-NewPrinterKey`, `-DriverSharePath` |
+| [PrinterCommon.ps1](PrinterCommon.ps1) | Shared helper functions used by all scripts | — | (not run directly) |
+| [PrinterConfig.psd1](PrinterConfig.psd1) | Sanitized sample printer configuration with placeholder printers and paths | — | (not run directly) |
 
 ## What Was Sanitized
 

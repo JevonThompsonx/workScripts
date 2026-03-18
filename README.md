@@ -1,123 +1,79 @@
 # workScripts
 
-PowerShell and batch scripts for Windows provisioning and common IT operations.
+PowerShell and batch scripts for Windows provisioning and IT operations.
 
-This repo includes Windows setup/debloat scripts, drive mapping helpers, software install/update tooling, printer deployment templates, and a few small utilities. Most scripts are meant for elevated PowerShell, and some are designed to run through an RMM.
+## Quick Start
 
-## Quick start (online)
-
-Run the master orchestrator (recommended):
+Interactive (elevated PowerShell):
 
 ```powershell
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Runners/Run-All-Work-Scriptsv1.2.ps1')"
 ```
 
-Non-interactive (RMM-friendly):
-
-```powershell
-powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Runners/Run-All-Work-Scriptsv1.2.ps1')" -NonInteractive -SkipDebloat -SkipRmmInstall
-```
-
-Non-interactive with Raphire debloat:
-
-```powershell
-& ([scriptblock]::Create((irm "https://debloat.raphi.re/"))) -RunDefaults
-```
-
-## RMM one-liner (no `C:\Archive` installs)
-
-Use the dedicated RMM runner with a forced Administrator password and no `C:\Archive` installs (skipped by design):
+RMM / non-interactive:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Runners/Run-All-Work-Scriptsv1.2-RMM.ps1')" -AdministratorPassword "<YOUR_PASSWORD>"
 ```
 
-If your RMM UI blocks special characters, use Base64:
+## One-Liner Reference
 
-```powershell
-powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Runners/Run-All-Work-Scriptsv1.2-RMM.ps1')" -AdministratorPasswordBase64 "<BASE64_UTF8_PASSWORD>"
-```
+| Script | What it does | One-liner |
+|--------|-------------|-----------|
+| **Runners** | | |
+| [Run-All-Work-Scriptsv1.2.ps1](Runners/Run-All-Work-Scriptsv1.2.ps1) | Interactive master setup orchestrator (v1.3) | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Runners/Run-All-Work-Scriptsv1.2.ps1')"` |
+| [Run-All-Work-Scriptsv1.2.ps1](Runners/Run-All-Work-Scriptsv1.2.ps1) `-NonInteractive` | Non-interactive variant | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Runners/Run-All-Work-Scriptsv1.2.ps1')" -NonInteractive -SkipDebloat -SkipRmmInstall` |
+| [Run-All-Work-Scriptsv1.2-RMM.ps1](Runners/Run-All-Work-Scriptsv1.2-RMM.ps1) | RMM non-interactive orchestrator | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Runners/Run-All-Work-Scriptsv1.2-RMM.ps1')" -AdministratorPassword "<PASSWORD>"` |
+| [Run-All-Work-Scriptsv1.2-RMM.ps1](Runners/Run-All-Work-Scriptsv1.2-RMM.ps1) `-AdministratorPasswordBase64` | Base64 password variant (RMM-safe for special characters) | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Runners/Run-All-Work-Scriptsv1.2-RMM.ps1')" -AdministratorPasswordBase64 "<BASE64>"` |
+| **Install** | | |
+| [installAllArchiveSoftwarev2.6.ps1](Install/installAllArchiveSoftwarev2.6.ps1) | Installs all MSI/EXE files from `C:\Archive`; MSIs silent with per-file logs, EXEs interactive (v2.6) | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Install/installAllArchiveSoftwarev2.6.ps1')"` |
+| [installAllArchiveSoftwarev2.6.ps1](Install/installAllArchiveSoftwarev2.6.ps1) `-NonInteractive` | Non-interactive / RMM variant | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Install/installAllArchiveSoftwarev2.6.ps1')" -NonInteractive` |
+| [Egnyte-Nuke.ps1](Install/updatingSoftware/egnyteNukeAndUpdate/Egnyte-Nuke.ps1) | Completely removes Egnyte and forces a reboot | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Install/updatingSoftware/egnyteNukeAndUpdate/Egnyte-Nuke.ps1')"` |
+| [Egnyte-NukeNoRestart.ps1](Install/updatingSoftware/egnyteNukeAndUpdate/Egnyte-NukeNoRestart.ps1) | Completely removes Egnyte without a forced reboot | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Install/updatingSoftware/egnyteNukeAndUpdate/Egnyte-NukeNoRestart.ps1')"` |
+| [Egnyte-Update.ps1](Install/updatingSoftware/egnyteNukeAndUpdate/Egnyte-Update.ps1) | Downloads and installs the latest Egnyte Connect | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Install/updatingSoftware/egnyteNukeAndUpdate/Egnyte-Update.ps1')"` |
+| [NinjaOne-Egnyte-Nuke.ps1](Install/updatingSoftware/egnyteNukeAndUpdate/NinjaOne-Egnyte-Nuke.ps1) | Enterprise Egnyte removal for NinjaOne RMM | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Install/updatingSoftware/egnyteNukeAndUpdate/NinjaOne-Egnyte-Nuke.ps1')"` |
+| [NinjaOne-Egnyte-Install.ps1](Install/updatingSoftware/egnyteNukeAndUpdate/NinjaOne-Egnyte-Install.ps1) | Enterprise Egnyte installer/updater for NinjaOne RMM | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Install/updatingSoftware/egnyteNukeAndUpdate/NinjaOne-Egnyte-Install.ps1')"` |
+| [DryRun-Egnyte-Nuke.ps1](Install/updatingSoftware/egnyteNukeAndUpdate/DryRun-Egnyte-Nuke.ps1) | Validates what the Egnyte nuke would remove (no destructive actions) | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Install/updatingSoftware/egnyteNukeAndUpdate/DryRun-Egnyte-Nuke.ps1')"` |
+| **Maintenance** | | |
+| [sfcDism.ps1](Maintenance/sfcDism.ps1) | Daily Windows maintenance: cadence-based DISM/SFC checks and repairs (v5.0.0) | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Maintenance/sfcDism.ps1')"` |
+| [Invoke-WindowsUpdateRemediation.ps1](Maintenance/Invoke-WindowsUpdateRemediation.ps1) | Unblocks stuck Windows 11 updates; supports Diagnose and Remediate modes | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Maintenance/Invoke-WindowsUpdateRemediation.ps1')"` |
+| [win11Debloat.ps1](Maintenance/win11Debloat.ps1) | Bulk removes Windows 11 bloatware apps | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Maintenance/win11Debloat.ps1')"` |
+| [win11Debloat.ps1](Maintenance/win11Debloat.ps1) `-NonInteractive` | Non-interactive variant | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Maintenance/win11Debloat.ps1')" -NonInteractive -ConfirmRemoval` |
+| [engineeringDebloat.ps1](Maintenance/engineeringDebloat.ps1) | Deep removal of engineering apps (Autodesk, Vectorworks, Bluebeam, SolidWorks, Bentley) | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Maintenance/engineeringDebloat.ps1')"` |
+| [engineeringDebloat.ps1](Maintenance/engineeringDebloat.ps1) `-NonInteractive` | Non-interactive variant | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Maintenance/engineeringDebloat.ps1')" -NonInteractive -ConfirmRemoval` |
+| [winApp_uninstaller.ps1](Maintenance/winApp_uninstaller.ps1) | Menu-driven Windows app uninstaller | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Maintenance/winApp_uninstaller.ps1')"` |
+| **Configuration** | | |
+| [setup_script_windows_settings1_3.ps1](Configuration/setup_script_windows_settings1_3.ps1) | Windows 11 settings baseline: power plan, UAC disable, dark mode, taskbar tweaks (v1.3) | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Configuration/setup_script_windows_settings1_3.ps1')"` |
+| [setup_script_windows_settings1_3.ps1](Configuration/setup_script_windows_settings1_3.ps1) `-NoPause` | Non-interactive variant | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Configuration/setup_script_windows_settings1_3.ps1')" -NoPause` |
+| [wingetInstall.ps1](Configuration/wingetInstall.ps1) | Installs Winget from the latest GitHub release; logs to `C:\Archive\InstallLogs` | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Configuration/wingetInstall.ps1')"` |
+| **Accounts** | | |
+| [enable_admin.bat](Accounts/enable_admin.bat) | Enables the built-in local Administrator account | `powershell -ExecutionPolicy Bypass -Command "$t = Join-Path $env:TEMP 'enable_admin.bat'; irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Accounts/enable_admin.bat' -OutFile $t; & $t"` |
+| [AllowGoogleCred.ps1](Accounts/AllowGoogleCred.ps1) | Installs/configures Google Credential Provider for Windows; uninstalls old versions and fixes black-box login (v3.0) | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Accounts/AllowGoogleCred.ps1')"` |
+| [AllowGCWPv1.3.ps1](Accounts/AllowGCWPv1.3.ps1) | GCPW installer with domain configuration (v1.3) | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Accounts/AllowGCWPv1.3.ps1')"` |
+| **Networking** | | |
+| [cloneDrives.ps1](Networking/cloneDrives.ps1) | Downloads Egnyte drive-mapping BAT presets to `C:\Archive\Map egnyte drives` | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Networking/cloneDrives.ps1')"` |
+| **Utilities** | | |
+| [cleanupGoogleFileAssociations.ps1](Utilities/cleanupGoogleFileAssociations.ps1) | Resets Google file associations (`.gdoc`, `.gsheet`, `.gslides`) so Egnyte can claim them (v6) | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Utilities/cleanupGoogleFileAssociations.ps1')"` |
+| [cleanupGoogleFileAssociations.ps1](Utilities/cleanupGoogleFileAssociations.ps1) `-NoPause` | Non-interactive variant | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Utilities/cleanupGoogleFileAssociations.ps1')" -NoPause` |
+| [lockGoogleFileAssociations.ps1](Utilities/lockGoogleFileAssociations.ps1) | Locks Google file associations to Egnyte via deny ACL (v5) | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Utilities/lockGoogleFileAssociations.ps1')"` |
+| [lockGoogleFileAssociations.ps1](Utilities/lockGoogleFileAssociations.ps1) `-NoPause` | Non-interactive variant | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Utilities/lockGoogleFileAssociations.ps1')" -NoPause` |
+| [lockGoogleFileAssociations.ps1](Utilities/lockGoogleFileAssociations.ps1) `-Unlock` | Reverses the ACL lock | `powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Utilities/lockGoogleFileAssociations.ps1')" -Unlock` |
 
-## Common one-liners
+## Folder Guide
 
-Windows setup (current settings script):
-
-```powershell
-powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Configuration/setup_script_windows_settings1_3.ps1')"
-```
-
-Non-interactive:
-
-```powershell
-powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Configuration/setup_script_windows_settings1_3.ps1')" -NoPause
-```
-
-Enable built-in local Administrator account:
-
-```powershell
-powershell -ExecutionPolicy Bypass -Command "$tempBat = Join-Path $env:TEMP 'enable_admin.bat'; irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Accounts/enable_admin.bat' -OutFile $tempBat; & $tempBat"
-```
-
-Allow Google Credential Provider for Windows (GCWP) settings:
-
-```powershell
-powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Accounts/AllowGoogleCred.ps1')"
-```
-
-Clone drive mapping BATs to `C:\Archive\Map egnyte drives`:
-
-```powershell
-powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Networking/cloneDrives.ps1')"
-```
-
-Install everything in `C:\Archive` (MSI silent + logging, EXE interactive):
-
-```powershell
-powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Install/installAllArchiveSoftwarev2.6.ps1')"
-```
-
-Non-interactive:
-
-```powershell
-powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Install/installAllArchiveSoftwarev2.6.ps1')" -NonInteractive
-```
-
-## Printer scripts
-
-The `Utilities/Printer-Scripts/` folder contains a public-safe printer deployment template set for Windows.
-
-It includes:
-
-- install-all printer deployment
-- install-selected printer deployment
-- delete-and-reinstall selected printers
-- a generalized printer swap script
-- shared helper functions
-- a config-driven printer definition file
-- a dedicated README explaining how to adapt the scripts
-
-Notes:
-
-- The public printer package is sanitized for GitHub
-- Real internal printer names, site identifiers, private IPs, and company-specific paths were removed
-- Sample values live in `Utilities/Printer-Scripts/PrinterConfig.psd1`
-- Vendor driver binaries are not included in the public template
-- See `Utilities/Printer-Scripts/README.md` for setup and customization details
-
-## Folder guide
-
-- `Runners/` master orchestration scripts that invoke other scripts remotely. See runner script headers for parameters.
-- `Install/` bulk installers for `C:\Archive`, NinjaOne agent helper, and Egnyte update/nuke flows. See `Install/README.md` and `Install/updatingSoftware/README.md`.
-- `Maintenance/` SFC/DISM repair, Windows Update remediation, debloat, and app uninstaller scripts. See `Maintenance/` for individual readme files.
-- `Configuration/` Windows 11 settings scripts (dark mode, power plan, UAC, winget). See `Configuration/README.md`.
-- `Accounts/` local Administrator account management and Google Credential Provider (GCWP) settings. See `Accounts/` scripts.
-- `Networking/` drive mapping BAT presets and the cloneDrives downloader. See `Networking/README.md`.
-- `Utilities/` file association cleanup/lock scripts, printer deployment templates, and Proxmox helpers. See `Utilities/README.md` and `Utilities/Printer-Scripts/README.md`.
-- `Archive/` deprecated or superseded scripts kept for reference. Do not use in production.
+- [`Runners/`](Runners/README.md) — master orchestration scripts that run all setup steps in sequence
+- [`Install/`](Install/README.md) — bulk `C:\Archive` installers, NinjaOne agent helper, and Egnyte update/nuke flows
+- [`Maintenance/`](Maintenance/README.md) — SFC/DISM repair, Windows Update remediation, debloat, and app uninstaller scripts
+- [`Configuration/`](Configuration/README.md) — Windows 11 settings baseline, Winget installer, and additional setup scripts
+- [`Accounts/`](Accounts/README.md) — local Administrator account management and Google Credential Provider for Windows
+- [`Networking/`](Networking/README.md) — Egnyte drive-mapping BAT presets and the `cloneDrives` downloader
+- [`Utilities/`](Utilities/README.md) — Google file association fix/lock, printer deployment templates, and Proxmox helpers
+- [`Archive/`](Archive/README.md) — deprecated or superseded scripts; do not use in production
 
 ## Notes
 
-- Most scripts require elevated PowerShell
-- Test deployment scripts in a lab or non-production environment first
-- Review script contents before using them in your environment
-- Some scripts assume Windows-specific paths, admin rights, or RMM execution context
+- Most scripts require elevated PowerShell (`Run as Administrator`).
+- Test deployment scripts in a lab or non-production environment first.
+- Review script contents before running in your environment.
+- Some scripts disable UAC; a reboot is required for that change to take effect.
+- `Archive/` scripts are deprecated and should not be used. They are kept for historical reference only.
