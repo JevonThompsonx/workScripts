@@ -10,7 +10,7 @@ For quick manual fixes or ad-hoc deployments, use these one-liners in an **eleva
 
 ### Step 1: Nuke Egnyte
 ```powershell
-& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/updatingSoftware/egnyteNukeAndUpdate/Egnyte-Nuke.ps1")))
+& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Install/updatingSoftware/egnyteNukeAndUpdate/Egnyte-Nuke.ps1")))
 ```
 
 ### Step 2: Reboot
@@ -27,7 +27,7 @@ https://egnyte-cdn.egnyte.com/egnytedrive/win/en-us/latest/EgnyteConnectWin.msi
 
 **Option B - Run Install Script:**
 ```powershell
-& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/updatingSoftware/egnyteNukeAndUpdate/Egnyte-Update.ps1")))
+& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Install/updatingSoftware/egnyteNukeAndUpdate/Egnyte-Update.ps1")))
 ```
 
 ---

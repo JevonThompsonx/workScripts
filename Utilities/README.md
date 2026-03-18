@@ -12,25 +12,25 @@ Egnyte + Google Drive coexistence fix for Google file formats (`.gdoc`, `.gsheet
 Cleanup/reset:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/fixes/cleanupGoogleFileAssociations.ps1')"
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Utilities/cleanupGoogleFileAssociations.ps1')"
 ```
 
 Non-interactive:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/fixes/cleanupGoogleFileAssociations.ps1')" -NoPause
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Utilities/cleanupGoogleFileAssociations.ps1')" -NoPause
 ```
 
 Lock:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/fixes/lockGoogleFileAssociations.ps1')"
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Utilities/lockGoogleFileAssociations.ps1')"
 ```
 
 Non-interactive:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/fixes/lockGoogleFileAssociations.ps1')" -NoPause
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Utilities/lockGoogleFileAssociations.ps1')" -NoPause
 ```
 
 ## Objective

@@ -9,13 +9,13 @@ Bulk installers that run everything found in `C:\Archive`.
 Online one-liner:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/installingSoftware/installAllArchiveSoftwarev2.6.ps1')"
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Install/installAllArchiveSoftwarev2.6.ps1')"
 ```
 
 Non-interactive (RMM):
 
 ```powershell
-powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/installingSoftware/installAllArchiveSoftwarev2.6.ps1')" -NonInteractive
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Install/installAllArchiveSoftwarev2.6.ps1')" -NonInteractive
 ```
 
 ## Other scripts in this folder
