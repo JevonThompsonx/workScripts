@@ -72,16 +72,16 @@ Write-Host "STEP 1: Running Windows Setup Scripts..." -ForegroundColor Cyan
 
 try {
     Write-Host "  -> Enabling Administrator Account..."
-    & ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/enable_admin.bat")))
+    & ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/Accounts/enable_admin.bat")))
     Write-Host "  -> Configuring Windows Settings (Dark Mode, Power Plan, UAC)..."
     if ($NonInteractive) {
-        & ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/setup_scriptv1.5.ps1"))) -NoPause
+        & ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/Configuration/setup_scriptv1.5.ps1"))) -NoPause
     }
     else {
-        & ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/setup_scriptv1.5.ps1")))
+        & ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/Configuration/setup_scriptv1.5.ps1")))
     }
     Write-Host "  -> Applying Google Credentials Provider settings..."
-    & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/AllowGoogleCredentials.ps1")))
+    & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Archive/AllowGoogleCredentials.ps1")))
     Write-Host "[OK] STEP 1 Complete: Windows Setup Scripts executed successfully." -ForegroundColor Green
     Write-Host ""
 }
@@ -95,7 +95,7 @@ catch {
 Write-Host "STEP 2: Running Egnyte Drive Cloning Script..." -ForegroundColor Cyan
 
 try {
-    & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/drives/cloneDrives.ps1")))
+    & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Networking/cloneDrives.ps1")))
     Write-Host "[OK] STEP 2 Complete: Egnyte Drive Cloning script executed." -ForegroundColor Green
     Write-Host ""
 }
@@ -110,10 +110,10 @@ Write-Host "STEP 3: Running Egnyte Software Update Script..." -ForegroundColor C
 
 try {
     if ($NonInteractive) {
-        & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/updatingSoftware/Update-Egnyte-v1.5.ps1"))) -NoPause
+        & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Install/updatingSoftware/Update-Egnyte-v1.5.ps1"))) -NoPause
     }
     else {
-        & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/updatingSoftware/Update-Egnyte-v1.5.ps1")))
+        & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Install/updatingSoftware/Update-Egnyte-v1.5.ps1")))
     }
     Write-Host "[OK] STEP 3 Complete: Egnyte Update script executed." -ForegroundColor Green
     Write-Host ""
@@ -129,7 +129,7 @@ Write-Host "STEP 4: Installing Software from C:\Archive..." -ForegroundColor Cya
 
 $archivePath = "C:\Archive"
 $minFileCount = $MinArchiveFileCount
-$installScriptUrl = "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/installingSoftware/installAllArchiveSoftwarev2.6.ps1"
+$installScriptUrl = "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/Install/installAllArchiveSoftwarev2.6.ps1"
 
 function Run-Archive-Install {
     try {

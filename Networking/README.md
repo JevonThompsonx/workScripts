@@ -18,7 +18,7 @@ Egnyte drive mapping helpers.
 Download the latest BAT presets to `C:\Archive\Map egnyte drives`:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/drives/cloneDrives.ps1')"
+powershell -ExecutionPolicy Bypass -Command "IEX (irm 'https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Networking/cloneDrives.ps1')"
 ```
 
 Then run the desired mapping BAT (either from `C:\Archive\Map egnyte drives` or from this folder).

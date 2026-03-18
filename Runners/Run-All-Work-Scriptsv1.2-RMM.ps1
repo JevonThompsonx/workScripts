@@ -89,7 +89,7 @@ if (-not $SkipSetup) {
 
     Write-Host "[STEP] Windows settings script..." -ForegroundColor Cyan
     try {
-        & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/windows%20setup/setup_script_windows_settings1_3.ps1"))) -NoPause
+        & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Configuration/setup_script_windows_settings1_3.ps1"))) -NoPause
     }
     catch {
         Write-Error "[ERROR] Windows settings script failed."
@@ -97,7 +97,7 @@ if (-not $SkipSetup) {
 
     Write-Host "[STEP] Google Credential Provider settings..." -ForegroundColor Cyan
     try {
-        & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/windows%20setup/AllowGoogleCred.ps1"))) -DomainsAllowedToLogin $DomainsAllowedToLogin
+        & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Accounts/AllowGoogleCred.ps1"))) -DomainsAllowedToLogin $DomainsAllowedToLogin
     }
     catch {
         Write-Error "[ERROR] Google Credential Provider script failed."
@@ -110,7 +110,7 @@ else {
 if (-not $SkipDriveClone) {
     Write-Host "[STEP] Clone Egnyte drive mapping scripts..." -ForegroundColor Cyan
     try {
-        & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/drives/cloneDrives.ps1")))
+        & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Networking/cloneDrives.ps1")))
     }
     catch {
         Write-Error "[ERROR] Drive clone script failed."
@@ -123,7 +123,7 @@ else {
 if (-not $SkipEgnyteInstall) {
     Write-Host "[STEP] Egnyte install/update..." -ForegroundColor Cyan
     try {
-        & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/updatingSoftware/Update-Egnyte-v1.5.ps1"))) -NoPause
+        & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Install/updatingSoftware/Update-Egnyte-v1.5.ps1"))) -NoPause
     }
     catch {
         Write-Error "[ERROR] Egnyte update script failed."
@@ -139,7 +139,7 @@ if ($RunEngineeringDebloat) {
     Write-Host "[STEP] Engineering debloat..." -ForegroundColor Cyan
     if ($ConfirmEngineeringDebloat) {
         try {
-            & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/windows%20setup/engineeringDebloat.ps1"))) -NonInteractive -Mode All -ConfirmRemoval -NoPause
+            & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/main/Maintenance/engineeringDebloat.ps1"))) -NonInteractive -Mode All -ConfirmRemoval -NoPause
         }
         catch {
             Write-Error "[ERROR] Engineering debloat failed."

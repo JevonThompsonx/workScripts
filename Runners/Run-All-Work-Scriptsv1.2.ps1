@@ -77,7 +77,7 @@ Write-Host "STEP 1: Running Windows Setup Scripts..." -ForegroundColor Cyan
 try {
     Write-Host "  -> Enabling Administrator Account..."
     # For .bat files, we must download them first, then execute them.
-    $batUrl = "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/enable_admin.bat"
+    $batUrl = "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/Accounts/enable_admin.bat"
     $tempBatFile = Join-Path $env:TEMP "enable_admin.bat"
     Invoke-WebRequest -Uri $batUrl -OutFile $tempBatFile
     & $tempBatFile
@@ -85,14 +85,14 @@ try {
 
     Write-Host "  -> Configuring Windows Settings (Dark Mode, Power Plan, UAC)..."
     if ($NonInteractive) {
-        & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/setup_script_windows_settings1_3.ps1"))) -NoPause
+        & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Configuration/setup_script_windows_settings1_3.ps1"))) -NoPause
     }
     else {
-        & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/windows%20setup/setup_script_windows_settings1_3.ps1")))
+        & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Configuration/setup_script_windows_settings1_3.ps1")))
     }
 
     Write-Host "  -> Applying Google Credentials Provider settings..."
-    & ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/AllowGoogleCred.ps1")))
+    & ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/Accounts/AllowGoogleCred.ps1")))
 
     Write-Host "[OK] STEP 1 Complete: Windows Setup Scripts executed successfully." -ForegroundColor Green
     Write-Host ""
@@ -198,7 +198,7 @@ Write-Host ""
 Write-Host "STEP 2: Running Egnyte Drive Cloning Script..." -ForegroundColor Cyan
 
 try {
-    & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/drives/cloneDrives.ps1")))
+    & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Networking/cloneDrives.ps1")))
     Write-Host "[OK] STEP 2 Complete: Egnyte Drive Cloning script executed." -ForegroundColor Green
     Write-Host ""
 }
@@ -220,10 +220,10 @@ if (-not $egnyteApp) {
     Write-Host "  -> Egnyte not found. Proceeding with installation..."
     try {
         if ($NonInteractive) {
-            & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/updatingSoftware/Update-Egnyte-v1.5.ps1"))) -NoPause
+            & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Install/updatingSoftware/Update-Egnyte-v1.5.ps1"))) -NoPause
         }
         else {
-            & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/updatingSoftware/Update-Egnyte-v1.5.ps1")))
+            & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Install/updatingSoftware/Update-Egnyte-v1.5.ps1")))
         }
         Write-Host "[OK] STEP 3 Complete: Egnyte installation script executed." -ForegroundColor Green
         Write-Host ""
@@ -245,7 +245,7 @@ Write-Host "STEP 4: Installing Software from C:\Archive..." -ForegroundColor Cya
 
 $archivePath = "C:\Archive"
 $minFileCount = $MinArchiveFileCount
-$installScriptUrl = "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/installingSoftware/installAllArchiveSoftwarev2.6.ps1"
+$installScriptUrl = "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/Install/installAllArchiveSoftwarev2.6.ps1"
 
 function Run-Archive-Install {
     try {
@@ -323,7 +323,7 @@ else {
 Write-Host "STEP 6: RMM install from C:\Archive\rmm..." -ForegroundColor Cyan
 
 $rmmPath = $RmmTargetDirectory
-$installScriptUrl = "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/windows%20setup/rmm.ps1"
+$installScriptUrl = "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/Accounts/rmm.ps1"
 
 function Run-RMM-Install {
     try {
