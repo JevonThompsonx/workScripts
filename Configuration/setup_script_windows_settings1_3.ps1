@@ -196,7 +196,7 @@ function Remove-TaskbarPin {
         [string]$AppName
     )
 
-    $taskBarDir = Join-Path -Path $env:APPDATA -ChildPath 'Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar'
+    $taskBarDir = Join-Path -Path ([System.Environment]::GetFolderPath('ApplicationData')) -ChildPath 'Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar'
     $pinnedItem = Get-ChildItem -Path $taskBarDir -ErrorAction SilentlyContinue |
         Where-Object { $_.Name -like "*$AppName*" } |
         Select-Object -First 1
