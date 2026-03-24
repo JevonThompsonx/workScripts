@@ -17,7 +17,13 @@
 .NOTES
     Author: Jevon Thompson
     Date: 2025-07-22
-    Version: 1.4
+    Version: 1.5
+    Changes in 1.5:
+        - Replaced all scriptblock-based remote execution ([scriptblock]::Create + irm) with
+          Invoke-RemoteScript, which downloads to a temp file and runs as a child powershell.exe
+          process. This prevents 'exit' calls in subscripts from terminating the main session
+          (was causing Steps 3-6 to never execute when cloneDrives.ps1 hit a 404 and called exit).
+        - No aliases: replaced irm with Invoke-WebRequest throughout.
     Changes in 1.4:
         - All catch blocks now emit $_.Exception.Message and $_.ScriptStackTrace for full error visibility.
         - Removed silent failure patterns across Steps 1-6.
@@ -71,6 +77,32 @@ catch {
 }
 
 
+#----------------------------------------------------------------------------------------------------
+# Helper: Download a remote .ps1 and run it as a child process
+# Running as a child process isolates 'exit' calls in subscripts so they cannot
+# terminate this session.  The temp file is always removed in the finally block.
+#----------------------------------------------------------------------------------------------------
+function Invoke-RemoteScript {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Url,
+        [string[]]$ScriptArgs = @()
+    )
+    $tempScript = [System.IO.Path]::ChangeExtension([System.IO.Path]::GetTempFileName(), '.ps1')
+    try {
+        $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -ErrorAction Stop
+        [System.IO.File]::WriteAllText($tempScript, $response.Content, [System.Text.Encoding]::UTF8)
+        & powershell.exe -ExecutionPolicy Bypass -File $tempScript @ScriptArgs
+    }
+    finally {
+        if (Test-Path -Path $tempScript) {
+            Remove-Item -Path $tempScript -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+
+
 # Step 1: Running Windows Setup Scripts
 #----------------------------------------------------------------------------------------------------
 Write-Host "STEP 1: Running Windows Setup Scripts..." -ForegroundColor Cyan
@@ -85,14 +117,14 @@ try {
 
     Write-Host "  -> Configuring Windows Settings (Dark Mode, Power Plan, UAC)..."
     if ($NonInteractive) {
-        & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Configuration/setup_script_windows_settings1_3.ps1"))) -NoPause
+        Invoke-RemoteScript -Url "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Configuration/setup_script_windows_settings1_3.ps1" -ScriptArgs @('-NoPause')
     }
     else {
-        & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Configuration/setup_script_windows_settings1_3.ps1")))
+        Invoke-RemoteScript -Url "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Configuration/setup_script_windows_settings1_3.ps1"
     }
 
     Write-Host "  -> Applying Google Credentials Provider settings..."
-    & ([scriptblock]::Create((irm "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/Accounts/AllowGoogleCred.ps1")))
+    Invoke-RemoteScript -Url "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/Accounts/AllowGoogleCred.ps1"
 
     Write-Host "[OK] STEP 1 Complete: Windows Setup Scripts executed successfully." -ForegroundColor Green
     Write-Host ""
@@ -183,7 +215,7 @@ Write-Host ""
 Write-Host "STEP 2: Running Egnyte Drive Cloning Script..." -ForegroundColor Cyan
 
 try {
-    & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Networking/cloneDrives.ps1" -ErrorAction Stop)))
+    Invoke-RemoteScript -Url "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Networking/cloneDrives.ps1"
     Write-Host "[OK] STEP 2 Complete: Egnyte Drive Cloning script executed." -ForegroundColor Green
     Write-Host ""
 }
@@ -206,10 +238,10 @@ if (-not $egnyteApp) {
     Write-Host "  -> Egnyte not found. Proceeding with installation..."
     try {
         if ($NonInteractive) {
-            & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Install/updatingSoftware/Update-Egnyte-v1.5.ps1" -ErrorAction Stop))) -NoPause
+            Invoke-RemoteScript -Url "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Install/updatingSoftware/Update-Egnyte-v1.5.ps1" -ScriptArgs @('-NoPause')
         }
         else {
-            & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Install/updatingSoftware/Update-Egnyte-v1.5.ps1" -ErrorAction Stop)))
+            Invoke-RemoteScript -Url "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Install/updatingSoftware/Update-Egnyte-v1.5.ps1"
         }
         Write-Host "[OK] STEP 3 Complete: Egnyte installation script executed." -ForegroundColor Green
         Write-Host ""
@@ -238,7 +270,7 @@ $installScriptUrl = "https://github.com/JevonThompsonx/workScripts/raw/refs/head
 function Run-Archive-Install {
     try {
         Write-Host "  -> Running software installation script..." -ForegroundColor Green
-        & ([scriptblock]::Create((irm $installScriptUrl -ErrorAction Stop))) -SkipDebloatPrompt -NoPause
+        Invoke-RemoteScript -Url $installScriptUrl -ScriptArgs @('-SkipDebloatPrompt', '-NoPause')
         Write-Host "[OK] STEP 4 Complete: Software installation script executed." -ForegroundColor Green
     }
     catch {
@@ -297,7 +329,7 @@ if ($SkipDebloat) {
 else {
     Write-Host "  -> Running Raphire Win11Debloat with default settings..." -ForegroundColor Green
     try {
-        & ([scriptblock]::Create((irm "https://debloat.raphi.re/" -ErrorAction Stop))) -RunDefaults -Silent
+        Invoke-RemoteScript -Url "https://debloat.raphi.re/" -ScriptArgs @('-RunDefaults', '-Silent')
         Write-Host "[OK] STEP 5 Complete: Raphire Debloat completed successfully." -ForegroundColor Green
     }
     catch {
@@ -319,10 +351,10 @@ function Run-RMM-Install {
     try {
         Write-Host "  -> Running RMM installation script..." -ForegroundColor Green
         if ($NonInteractive) {
-            & ([scriptblock]::Create((irm $installScriptUrl -ErrorAction Stop))) -NonInteractive -TargetDirectory $rmmPath -Selection $RmmSelection -NoPause
+            Invoke-RemoteScript -Url $installScriptUrl -ScriptArgs @('-NonInteractive', '-TargetDirectory', $rmmPath, '-Selection', $RmmSelection, '-NoPause')
         }
         else {
-            & ([scriptblock]::Create((irm $installScriptUrl -ErrorAction Stop)))
+            Invoke-RemoteScript -Url $installScriptUrl
         }
         Write-Host "[OK] STEP 6 Complete: RMM installation script executed." -ForegroundColor Green
     }
