@@ -91,8 +91,7 @@ function Invoke-RemoteScript {
     )
     $tempScript = [System.IO.Path]::ChangeExtension([System.IO.Path]::GetTempFileName(), '.ps1')
     try {
-        $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -ErrorAction Stop
-        [System.IO.File]::WriteAllText($tempScript, $response.Content, [System.Text.Encoding]::UTF8)
+        Invoke-WebRequest -Uri $Url -OutFile $tempScript -UseBasicParsing -ErrorAction Stop
         & powershell.exe -ExecutionPolicy Bypass -File $tempScript @ScriptArgs
     }
     finally {
