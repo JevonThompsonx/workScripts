@@ -17,7 +17,10 @@
 .NOTES
     Author: Jevon Thompson
     Date: 2025-07-22
-    Version: 1.3
+    Version: 1.4
+    Changes in 1.4:
+        - All catch blocks now emit $_.Exception.Message and $_.ScriptStackTrace for full error visibility.
+        - Removed silent failure patterns across Steps 1-6.
 #>
 
 #====================================================================================================
@@ -43,11 +46,9 @@ Write-Host ""
 Write-Host "IMPORTANT: Make sure you're running PowerShell as Administrator!" -ForegroundColor Yellow
 Write-Host ""
 
-# Verify the script is running in an elevated (Administrator) session.
 if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
     Write-Error "[ERROR] This script requires Administrator privileges!"
     Write-Warning "Please right-click PowerShell and select 'Run as Administrator', then try again."
-    # Pause for 10 seconds before exiting to allow user to read the message.
     if (-not $NonInteractive) {
         Start-Sleep -Seconds 10
     }
@@ -57,14 +58,14 @@ else {
     Write-Host "[OK] Administrator privileges confirmed." -ForegroundColor Green
 }
 
-# Bypass execution policy for the current process to ensure remote scripts can run.
 try {
     Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
     Write-Host "[OK] Execution policy set to 'Bypass' for the current session." -ForegroundColor Green
     Write-Host ""
 }
 catch {
-    Write-Error "[ERROR] Failed to set execution policy. Halting script."
+    Write-Error "[ERROR] Failed to set execution policy: $($_.Exception.Message)"
+    Write-Host "Stack: $($_.ScriptStackTrace)" -ForegroundColor Red
     Start-Sleep -Seconds 5
     exit
 }
@@ -76,10 +77,9 @@ Write-Host "STEP 1: Running Windows Setup Scripts..." -ForegroundColor Cyan
 
 try {
     Write-Host "  -> Enabling Administrator Account..."
-    # For .bat files, we must download them first, then execute them.
     $batUrl = "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/Accounts/enable_admin.bat"
     $tempBatFile = Join-Path $env:TEMP "enable_admin.bat"
-    Invoke-WebRequest -Uri $batUrl -OutFile $tempBatFile
+    Invoke-WebRequest -Uri $batUrl -OutFile $tempBatFile -ErrorAction Stop
     & $tempBatFile
     Remove-Item $tempBatFile -Force
 
@@ -98,7 +98,10 @@ try {
     Write-Host ""
 }
 catch {
-    Write-Error "[ERROR] An error occurred during Windows Setup. Please check the output above."
+    Write-Error "[ERROR] An error occurred during Windows Setup: $($_.Exception.Message)"
+    Write-Host "Stack: $($_.ScriptStackTrace)" -ForegroundColor Red
+    Write-Host "Continuing to next step..." -ForegroundColor Yellow
+    Write-Host ""
 }
 
 
@@ -106,7 +109,6 @@ catch {
 #----------------------------------------------------------------------------------------------------
 Write-Host "STEP 1.5: Configuring Laptop-Specific Power Settings..." -ForegroundColor Cyan
 
-# Detect if the device is a laptop by checking for the presence of a battery
 $isLaptop = $false
 try {
     $battery = Get-CimInstance -ClassName Win32_Battery -ErrorAction SilentlyContinue
@@ -119,25 +121,18 @@ try {
     }
 }
 catch {
-    Write-Warning "Could not detect device type. Assuming desktop."
+    Write-Warning "Could not detect device type: $($_.Exception.Message). Assuming desktop."
 }
 
 if ($isLaptop) {
-    # Configure lid close action to "Do Nothing" when on AC power
     Write-Host "  -> Configuring lid close action for laptops..."
     try {
-        # Get the active power plan GUID
         $activePlan = (Get-CimInstance -ClassName Win32_PowerPlan -Namespace root\cimv2\power | Where-Object { $_.IsActive -eq $true }).InstanceID
         $planGuid = ($activePlan -split '[{}]')[1]
 
-        # Lid close action settings
-        # Sub-group GUID for "Power buttons and lid"
-        $lidSubGroup = "4f971e89-eebd-4455-a8de-9e59040e7347"
-        # Setting GUID for "Lid close action"
-        $lidCloseSetting = "5ca83367-6e45-459f-a27b-476b1d01c936"
-        # Value 0 = Do Nothing, 1 = Sleep, 2 = Hibernate, 3 = Shut down
+        $lidSubGroup      = "4f971e89-eebd-4455-a8de-9e59040e7347"
+        $lidCloseSetting  = "5ca83367-6e45-459f-a27b-476b1d01c936"
 
-        # Set lid close action to "Do Nothing" (0) when plugged in (AC)
         powercfg -setacvalueindex $planGuid $lidSubGroup $lidCloseSetting 0
         Write-Host "  -> Lid close action set to 'Do Nothing' when on AC power." -ForegroundColor Green
     }
@@ -146,39 +141,29 @@ if ($isLaptop) {
     }
 }
 
-# Check if High Performance power plan exists and is active
 Write-Host "  -> Checking power plan configuration..."
 try {
     $highPerfPlan = Get-CimInstance -ClassName Win32_PowerPlan -Namespace root\cimv2\power | Where-Object { $_.ElementName -like '*High performance*' }
-    $activePlan = Get-CimInstance -ClassName Win32_PowerPlan -Namespace root\cimv2\power | Where-Object { $_.IsActive -eq $true }
+    $activePlan   = Get-CimInstance -ClassName Win32_PowerPlan -Namespace root\cimv2\power | Where-Object { $_.IsActive -eq $true }
 
     if (-not $highPerfPlan) {
         Write-Host "  -> High Performance power plan not available. Adjusting screen and sleep settings..." -ForegroundColor Yellow
 
-        # Get the active power plan GUID
         $planGuid = ($activePlan.InstanceID -split '[{}]')[1]
 
-        # Display sub-group GUID
-        $displaySubGroup = "7516b95f-f776-4464-8c53-06167f40cc99"
-        # Screen timeout setting GUID
+        $displaySubGroup      = "7516b95f-f776-4464-8c53-06167f40cc99"
         $screenTimeoutSetting = "3c0bc021-c8a8-4e07-a973-6b14cbcb2b7e"
+        $sleepSubGroup        = "238c9fa8-0aad-41ed-83f4-97be242c8f20"
+        $sleepTimeoutSetting  = "29f6c1db-86da-48c5-9fdb-f2b67b1f44da"
 
-        # Sleep sub-group GUID
-        $sleepSubGroup = "238c9fa8-0aad-41ed-83f4-97be242c8f20"
-        # Sleep timeout setting GUID
-        $sleepTimeoutSetting = "29f6c1db-86da-48c5-9fdb-f2b67b1f44da"
-
-        # Set screen timeout to 30 minutes (1800 seconds) for both AC and DC
         powercfg -setacvalueindex $planGuid $displaySubGroup $screenTimeoutSetting 1800
         powercfg -setdcvalueindex $planGuid $displaySubGroup $screenTimeoutSetting 1800
         Write-Host "  -> Screen timeout set to 30 minutes." -ForegroundColor Green
 
-        # Set sleep timeout to never (0) for both AC and DC
         powercfg -setacvalueindex $planGuid $sleepSubGroup $sleepTimeoutSetting 0
         powercfg -setdcvalueindex $planGuid $sleepSubGroup $sleepTimeoutSetting 0
         Write-Host "  -> Sleep timeout set to 'Never'." -ForegroundColor Green
 
-        # Apply the changes
         powercfg -setactive $planGuid
     }
     else {
@@ -198,12 +183,16 @@ Write-Host ""
 Write-Host "STEP 2: Running Egnyte Drive Cloning Script..." -ForegroundColor Cyan
 
 try {
-    & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Networking/cloneDrives.ps1")))
+    & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Networking/cloneDrives.ps1" -ErrorAction Stop)))
     Write-Host "[OK] STEP 2 Complete: Egnyte Drive Cloning script executed." -ForegroundColor Green
     Write-Host ""
 }
 catch {
-    Write-Error "[ERROR] An error occurred while cloning Egnyte drives."
+    Write-Error "[ERROR] An error occurred while cloning Egnyte drives: $($_.Exception.Message)"
+    Write-Host "Stack: $($_.ScriptStackTrace)" -ForegroundColor Red
+    Write-Host "Verify that https://github.com/JevonThompsonx/workScripts exists, is public, and the path is correct." -ForegroundColor Yellow
+    Write-Host "Continuing to next step..." -ForegroundColor Yellow
+    Write-Host ""
 }
 
 
@@ -211,28 +200,27 @@ catch {
 #----------------------------------------------------------------------------------------------------
 Write-Host "STEP 3: Checking Egnyte Software Status..." -ForegroundColor Cyan
 
-# Check if Egnyte is already installed by querying the package manager.
-# -ErrorAction SilentlyContinue prevents red text if the app isn't found.
 $egnyteApp = Get-Package -Name "Egnyte*" -ErrorAction SilentlyContinue
 
-# If the package is NOT found ($egnyteApp is null), then run the installation script.
 if (-not $egnyteApp) {
     Write-Host "  -> Egnyte not found. Proceeding with installation..."
     try {
         if ($NonInteractive) {
-            & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Install/updatingSoftware/Update-Egnyte-v1.5.ps1"))) -NoPause
+            & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Install/updatingSoftware/Update-Egnyte-v1.5.ps1" -ErrorAction Stop))) -NoPause
         }
         else {
-            & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Install/updatingSoftware/Update-Egnyte-v1.5.ps1")))
+            & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/JevonThompsonx/workScripts/refs/heads/main/Install/updatingSoftware/Update-Egnyte-v1.5.ps1" -ErrorAction Stop)))
         }
         Write-Host "[OK] STEP 3 Complete: Egnyte installation script executed." -ForegroundColor Green
         Write-Host ""
     }
     catch {
-        Write-Error "[ERROR] An error occurred while installing Egnyte."
+        Write-Error "[ERROR] An error occurred while installing Egnyte: $($_.Exception.Message)"
+        Write-Host "Stack: $($_.ScriptStackTrace)" -ForegroundColor Red
+        Write-Host "Continuing to next step..." -ForegroundColor Yellow
+        Write-Host ""
     }
 }
-# If the package IS found, skip the installation.
 else {
     Write-Host "[OK] Egnyte is already installed. Skipping this step." -ForegroundColor Green
     Write-Host ""
@@ -243,22 +231,22 @@ else {
 #----------------------------------------------------------------------------------------------------
 Write-Host "STEP 4: Installing Software from C:\Archive..." -ForegroundColor Cyan
 
-$archivePath = "C:\Archive"
-$minFileCount = $MinArchiveFileCount
+$archivePath      = "C:\Archive"
+$minFileCount     = $MinArchiveFileCount
 $installScriptUrl = "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/Install/installAllArchiveSoftwarev2.6.ps1"
 
 function Run-Archive-Install {
     try {
         Write-Host "  -> Running software installation script..." -ForegroundColor Green
-        & ([scriptblock]::Create((irm $installScriptUrl))) -SkipDebloatPrompt -NoPause
+        & ([scriptblock]::Create((irm $installScriptUrl -ErrorAction Stop))) -SkipDebloatPrompt -NoPause
         Write-Host "[OK] STEP 4 Complete: Software installation script executed." -ForegroundColor Green
     }
     catch {
-        Write-Error "[ERROR] An error occurred during the software installation."
+        Write-Error "[ERROR] An error occurred during the software installation: $($_.Exception.Message)"
+        Write-Host "Stack: $($_.ScriptStackTrace)" -ForegroundColor Red
     }
 }
 
-# Check if the archive folder exists and has more than the minimum number of files
 if ($SkipArchiveInstall) {
     Write-Host "  -> Skipping archive software installation as requested." -ForegroundColor Yellow
 }
@@ -273,25 +261,23 @@ else {
         Write-Host "  -> Non-interactive mode: skipping archive software installation." -ForegroundColor Yellow
     }
     else {
-        # Loop to prompt the user for action
         while ($true) {
             $choice = Read-Host "  -> Please add files to C:\Archive now. Press 'y' to continue with installation, or 'n' to exit the script"
 
             if ($choice -eq 'y') {
-                # Re-check the condition after user intervention
                 if ((Test-Path -Path $archivePath) -and ((Get-ChildItem -Path $archivePath).Count -gt $minFileCount)) {
                     Write-Host "  -> Condition now met. Proceeding with installation." -ForegroundColor Green
                     Run-Archive-Install
-                    break # Exit the while loop
+                    break
                 }
                 else {
                     Write-Warning "  -> The archive folder is still not ready. Exiting script."
-                    break # Exit the while loop
+                    break
                 }
             }
             elseif ($choice -eq 'n') {
                 Write-Host "  -> Exiting script as requested. The software installation was skipped." -ForegroundColor Yellow
-                break # Exit the while loop
+                break
             }
             else {
                 Write-Warning "  -> Invalid input. Please press 'y' to continue or 'n' to exit."
@@ -299,6 +285,7 @@ else {
         }
     }
 }
+
 
 # Step 5: Windows Debloat (Raphire Win11Debloat)
 #----------------------------------------------------------------------------------------------------
@@ -310,38 +297,41 @@ if ($SkipDebloat) {
 else {
     Write-Host "  -> Running Raphire Win11Debloat with default settings..." -ForegroundColor Green
     try {
-        & ([scriptblock]::Create((irm "https://debloat.raphi.re/"))) -RunDefaults -Silent
+        & ([scriptblock]::Create((irm "https://debloat.raphi.re/" -ErrorAction Stop))) -RunDefaults -Silent
         Write-Host "[OK] STEP 5 Complete: Raphire Debloat completed successfully." -ForegroundColor Green
     }
     catch {
-        Write-Error "[ERROR] An error occurred while running Raphire Debloat."
+        Write-Error "[ERROR] An error occurred while running Raphire Debloat: $($_.Exception.Message)"
+        Write-Host "Stack: $($_.ScriptStackTrace)" -ForegroundColor Red
+        Write-Host "Continuing to next step..." -ForegroundColor Yellow
     }
 }
+
 
 # Step 6: Install RMM from C:\Archive\rmm
 #----------------------------------------------------------------------------------------------------
 Write-Host "STEP 6: RMM install from C:\Archive\rmm..." -ForegroundColor Cyan
 
-$rmmPath = $RmmTargetDirectory
+$rmmPath          = $RmmTargetDirectory
 $installScriptUrl = "https://github.com/JevonThompsonx/workScripts/raw/refs/heads/main/Accounts/rmm.ps1"
 
 function Run-RMM-Install {
     try {
         Write-Host "  -> Running RMM installation script..." -ForegroundColor Green
         if ($NonInteractive) {
-            & ([scriptblock]::Create((irm $installScriptUrl))) -NonInteractive -TargetDirectory $rmmPath -Selection $RmmSelection -NoPause
+            & ([scriptblock]::Create((irm $installScriptUrl -ErrorAction Stop))) -NonInteractive -TargetDirectory $rmmPath -Selection $RmmSelection -NoPause
         }
         else {
-            & ([scriptblock]::Create((irm $installScriptUrl)))
+            & ([scriptblock]::Create((irm $installScriptUrl -ErrorAction Stop)))
         }
         Write-Host "[OK] STEP 6 Complete: RMM installation script executed." -ForegroundColor Green
     }
     catch {
-        Write-Error "[ERROR] An error occurred during the RMM installation."
+        Write-Error "[ERROR] An error occurred during the RMM installation: $($_.Exception.Message)"
+        Write-Host "Stack: $($_.ScriptStackTrace)" -ForegroundColor Red
     }
 }
 
-# Check if RMM folder exists before attempting install
 if ($SkipRmmInstall) {
     Write-Host "  -> Skipping RMM installation as requested." -ForegroundColor Yellow
 }
@@ -352,11 +342,12 @@ elseif (Test-Path -Path $rmmPath) {
 else {
     Write-Host "  -> RMM folder not found at $rmmPath. Skipping RMM installation." -ForegroundColor Yellow
 }
+
 Write-Host ""
 Write-Host "===========================================================" -ForegroundColor Cyan
 Write-Host "               MASTER SCRIPT FINISHED"
 Write-Host "===========================================================" -ForegroundColor Cyan
-# Pause at the end to allow the user to review the output.
+
 if (-not $NonInteractive) {
     Read-Host "Press Enter to close this window..."
 }
