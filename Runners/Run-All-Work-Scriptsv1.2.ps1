@@ -318,21 +318,21 @@ else {
 }
 
 
-# Step 5: Windows Debloat (Raphire Win11Debloat)
+# Step 5: Windows Debloat
 #----------------------------------------------------------------------------------------------------
-Write-Host "STEP 5: Running Windows Debloat (Raphire)..." -ForegroundColor Cyan
+Write-Host "STEP 5: Running Windows Debloat..." -ForegroundColor Cyan
 
 if ($SkipDebloat) {
     Write-Host "  -> Skipping debloat step as requested." -ForegroundColor Yellow
 }
 else {
-    Write-Host "  -> Running Raphire Win11Debloat with default settings..." -ForegroundColor Green
+    Write-Host "  -> Running AutoDebloat script..." -ForegroundColor Green
     try {
-        Invoke-RemoteScript -Url "https://debloat.raphi.re/" -ScriptArgs @('-RunDefaults', '-Silent')
-        Write-Host "[OK] STEP 5 Complete: Raphire Debloat completed successfully." -ForegroundColor Green
+        Invoke-RemoteScript -Url "https://raw.githubusercontent.com/JevonThompsonx/Win11Debloat/master/Invoke-AutoDebloat.ps1"
+        Write-Host "[OK] STEP 5 Complete: Debloat completed successfully." -ForegroundColor Green
     }
     catch {
-        Write-Error "[ERROR] An error occurred while running Raphire Debloat: $($_.Exception.Message)"
+        Write-Error "[ERROR] An error occurred while running Debloat: $($_.Exception.Message)"
         Write-Host "Stack: $($_.ScriptStackTrace)" -ForegroundColor Red
         Write-Host "Continuing to next step..." -ForegroundColor Yellow
     }
